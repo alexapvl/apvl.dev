@@ -1,0 +1,176 @@
+---
+// Navigation panel - expands upward from persistent bottom bar
+---
+
+<div id="nav-panel" class="nav-panel">
+  <!-- Expandable keybinds (above the bottom bar) -->
+  <div class="nav-keybinds">
+    <div class="nav-keybinds-inner">
+      <ul class="keybinds-list">
+        <li><kbd>h</kbd> <span>home</span></li>
+        <li><kbd>s</kbd> <span>stuff</span></li>
+        <li><kbd>t</kbd> <span>thoughts</span></li>
+        <li>
+          <kbd class="kbd-icon"
+            ><svg
+              viewBox="0 0 24 24"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"
+              ></path><line x1="18" y1="9" x2="12" y2="15"></line><line
+                x1="12"
+                y1="9"
+                x2="18"
+                y2="15"></line></svg
+            ></kbd
+          >
+          <span>back</span>
+        </li>
+        <li class="separator"></li>
+        <li><kbd>0</kbd> <span>toggle theme</span></li>
+        <li><kbd>m</kbd> <span>toggle music</span></li>
+        <li class="separator"></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Persistent bottom bar -->
+  <div class="nav-bottom">
+    <kbd>n</kbd>
+    <span class="nav-label">
+      <span class="label-collapsed">navigation</span>
+      <span class="label-expanded">close</span>
+    </span>
+  </div>
+</div>
+
+<style>
+  .nav-panel {
+    position: fixed;
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+    z-index: var(--z-overlay);
+    background-color: color-mix(
+      in srgb,
+      var(--color-bg-secondary) 95%,
+      transparent
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  /* Expandable keybinds section */
+  .nav-keybinds {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-keybinds-inner {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .nav-panel.expanded .nav-keybinds {
+    grid-template-rows: 1fr;
+  }
+
+  .keybinds-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md) var(--space-xs); /* top, sides, bottom */
+  }
+
+  .keybinds-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .keybinds-list li.separator {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: var(--space-xs) 0;
+  }
+
+  /* Persistent bottom bar */
+  .nav-bottom {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md); /* top-bottom, sides */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    transition: padding 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-panel.expanded .nav-bottom {
+    padding-top: var(--space-xs);
+  }
+
+  .nav-label {
+    position: relative;
+  }
+
+  .label-collapsed,
+  .label-expanded {
+    transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .label-expanded {
+    position: absolute;
+    left: 0;
+    opacity: 0;
+  }
+
+  .nav-panel.expanded .label-collapsed {
+    opacity: 0;
+  }
+
+  .nav-panel.expanded .label-expanded {
+    opacity: 1;
+  }
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: inset 0 -1px 0 var(--color-border);
+  }
+
+  kbd.kbd-icon {
+    padding: 5px 5px;
+  }
+
+  kbd.kbd-icon svg {
+    display: block;
+  }
+
+  /* Hide nav panel on mobile - keybinds are desktop-only */
+  @media (max-width: 640px) {
+    .nav-panel {
+      display: none !important;
+    }
+  }
+</style>

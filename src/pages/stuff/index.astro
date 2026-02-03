@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("stuff")).sort(
+  (a, b) => b.data.year - a.data.year
+);
+---
+
+<BaseLayout
+  title="Stuff | apvl.dev"
+  description="Projects and software I've built or contributed to building."
+>
+  <section class="page">
+    <header class="page-header">
+      <h1 class="page-title">stuff</h1>
+      <p class="page-description">it all started with a 'what if?'.</p>
+    </header>
+
+    {
+      projects.length === 0 ? (
+        <p class="empty-state">Nothing here yet. Check back soon!</p>
+      ) : (
+        <>
+          <section class="stuff-section">
+            <div class="stuff-grid">
+              {projects.map((project) => (
+                <ProjectCard
+                  title={project.data.title}
+                  description={project.data.description}
+                  year={project.data.year}
+                  tech={project.data.tech}
+                  github={project.data.github}
+                  slug={project.slug}
+                />
+              ))}
+            </div>
+          </section>
+        </>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .stuff-section {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .section-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--space-lg);
+  }
+
+  .stuff-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+</style>

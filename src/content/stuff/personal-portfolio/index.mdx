@@ -1,0 +1,23 @@
+---
+title: "Personal Portfolio"
+description: "personal website where I share thoughts and projects"
+year: 2026
+github: "https://github.com/alexapvl/apvl.dev"
+demo: "https://apvl.dev"
+tech: ["Astro", "TypeScript", "WebGL", "MDX"]
+---
+
+this is the website you're currently viewing. i built it to showcase my work and share my thoughts on life in general.
+
+### Features
+
+- **WebGL noise background** - animated perlin noise with dithering, reacts to music
+- **Music player** - press `m` to play music, background goes brrr
+- **Theme toggle** - press `0` to switch between light and dark modes
+- **Keyboard navigation** - press `n` for navigation menu
+- **MDX blog** - write posts in Markdown with component support
+
+### Technical Details
+
+- the background uses WebGL with a custom shader featuring perlin noise. it responds to audio input, warping the texture based on bass and overall levels.
+- state persists across page navigations - both the background animation and music playback continue seamlessly by using [Astro ClientRouter](https://docs.astro.build/en/guides/view-transitions/#persisting-state-across-view-transitions).

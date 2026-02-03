@@ -1,0 +1,41 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<!-- Credits - at the bottom of the page -->
+<footer class="footer">
+  <p class="credits">
+    &copy; {currentYear} alexapvl / <a href="/credits" class="credits-link"
+      >credits</a>
+  </p>
+</footer>
+
+<style>
+  .footer {
+    width: 100%;
+    padding: var(--space-xl) var(--space-lg);
+    margin-top: auto;
+  }
+
+  .credits {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+  }
+
+  .credits-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .credits-link:hover {
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    .footer {
+      padding: var(--space-lg) var(--space-md);
+    }
+  }
+</style>

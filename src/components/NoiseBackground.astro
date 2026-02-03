@@ -1,0 +1,67 @@
+---
+
+---
+
+<div id="noise-background" class="noise-background" transition:persist></div>
+
+<style>
+  .noise-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-background);
+    pointer-events: none;
+  }
+
+  .noise-background canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+</style>
+
+<script>
+  import { initNoiseBackground } from "../scripts/noise-background";
+  import * as musicPlayer from "../scripts/music-player";
+
+  declare global {
+    interface Window {
+      __noiseBackgroundInstance?: ReturnType<typeof initNoiseBackground>;
+    }
+  }
+
+  function setup() {
+    const container = document.getElementById("noise-background");
+    if (!container) return;
+
+    // Reuse existing background instance if available (View Transitions persist)
+    let background = window.__noiseBackgroundInstance;
+    background?.destroy();
+
+    background = initNoiseBackground(container);
+    window.__noiseBackgroundInstance = background;
+
+    // Connect audio callback to background
+    musicPlayer.connectAudioCallback((level, bass) => {
+      background!.setAudioLevels(level, bass);
+    });
+
+    // Expose simple player interface for keybinds
+    (window as any).musicPlayer = {
+      toggle: musicPlayer.toggle,
+      play: musicPlayer.play,
+      pause: musicPlayer.pause,
+      setVolume: musicPlayer.setVolume,
+      get isPlaying() {
+        return musicPlayer.isPlaying();
+      },
+    };
+  }
+
+  // Run on initial load
+  setup();
+
+  // Run on View Transitions navigation
+  document.addEventListener("astro:page-load", setup);
+</script>

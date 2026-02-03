@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const credits = [
+  {
+    name: "Crețu Cristian",
+    website: "https://cretu.dev",
+    inspiration: "background shaders inspiration, navigation keybinds",
+  },
+  {
+    name: "Drăguța Vasile",
+    website: "https://draguta.dev",
+    inspiration: "personal feel, credits page, copy email interaction",
+  },
+  {
+    name: "Emil Kowalski",
+    website: "https://emilkowal.ski/",
+    inspiration: "clean animation patterns",
+  },
+  {
+    name: "Lee Robinson",
+    website: "https://leerob.com",
+    inspiration: "clean, minimal design inspiration",
+  },
+  {
+    name: "Rauno Freiberg",
+    website: "https://rauno.me",
+    inspiration: "attention to detail and craft",
+  },
+];
+---
+
+<BaseLayout
+  title="Credits | apvl.dev"
+  description="People who inspired this website."
+>
+  <section class="page">
+    <header class="page-header">
+      <h1 class="page-title">credits</h1>
+      <p class="page-description">people who inspired this website.</p>
+    </header>
+
+    <ul class="credits-list">
+      {
+        credits.map(({ name, website, inspiration }) => (
+          <li>
+            <a href={website} target="_blank" rel="noopener noreferrer">
+              {name}
+            </a>
+            <span class="credit-note">{inspiration}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .credits-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .credits-list li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .credits-list a {
+    font-size: var(--font-size-lg);
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    transition: color var(--transition-fast);
+  }
+
+  .credits-list a:hover {
+    color: var(--color-accent);
+  }
+
+  .credit-note {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+</style>

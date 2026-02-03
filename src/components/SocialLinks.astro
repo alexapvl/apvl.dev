@@ -1,0 +1,132 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+const links = [
+  { href: "https://x.com/alexapvl", label: "twitter/x" },
+  { href: "https://github.com/alexapvl", label: "github" },
+  { href: "https://linkedin.com/in/alexapvl", label: "linkedin" },
+];
+
+const email = "alex@apvl.dev";
+---
+
+<div class:list={["social-links", className]}>
+  {
+    links.map(({ href, label }) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="social-link"
+      >
+        {label}
+      </a>
+    ))
+  }
+  <button
+    type="button"
+    class="social-link email-copy"
+    data-email={email}
+    aria-label="Copy email to clipboard"
+  >
+    <span class="email-text">alex[at]apvl.dev</span>
+    <span class="email-copied">ready to paste</span>
+  </button>
+</div>
+
+<style>
+  .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+  }
+
+  .social-link {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .social-link:hover {
+    color: var(--color-accent);
+  }
+
+  .email-copy {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    display: inline-grid;
+    place-items: center start;
+  }
+
+  .email-text,
+  .email-copied {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .email-text {
+    display: inline-block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .email-copied {
+    position: absolute;
+    gap: 0.25em;
+    color: var(--color-accent);
+    opacity: 0;
+    transform: translateY(4px);
+    white-space: nowrap;
+  }
+
+  .email-copy.copied .email-text {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  .email-copy.copied .email-copied {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+
+<script>
+  function initEmailCopy() {
+    const emailButtons = document.querySelectorAll(".email-copy");
+
+    emailButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const email = button.getAttribute("data-email");
+        if (!email) return;
+
+        try {
+          await navigator.clipboard.writeText(email);
+          button.classList.add("copied");
+
+          setTimeout(() => {
+            button.classList.remove("copied");
+          }, 1500);
+        } catch (err) {
+          console.error("Failed to copy email:", err);
+        }
+      });
+    });
+  }
+
+  // Run on initial load
+  initEmailCopy();
+
+  // Run on View Transitions navigation
+  document.addEventListener("astro:page-load", initEmailCopy);
+</script>

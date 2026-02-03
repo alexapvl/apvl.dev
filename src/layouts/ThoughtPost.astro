@@ -1,0 +1,135 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import "../styles/prose.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  cover?: string;
+  tags?: string[];
+}
+
+const { title, description, pubDate, updatedDate, cover, tags } = Astro.props;
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+---
+
+<BaseLayout
+  title={`${title} | apvl.dev`}
+  description={description}
+  image={cover}
+>
+  <article class="page">
+    <header class="page-header">
+      <div class="post-meta">
+        <time datetime={pubDate.toISOString()}>
+          {formatDate(pubDate)}
+        </time>
+        {
+          updatedDate && (
+            <span class="updated">
+              (Updated:{" "}
+              <time datetime={updatedDate.toISOString()}>
+                {formatDate(updatedDate)}
+              </time>
+              )
+            </span>
+          )
+        }
+      </div>
+      <h1 class="page-title">{title}</h1>
+      {description && <p class="page-description">{description}</p>}
+      {
+        tags && tags.length > 0 && (
+          <div class="post-tags">
+            {tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    {cover && <img src={cover} alt="" class="cover-image" />}
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    <footer class="post-footer">
+      <p class="back-link-text">
+        back to <a href="/thoughts" class="back-link">/thoughts</a>
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-meta {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: calc(-1 * var(--space-xl));
+    margin-bottom: var(--space-sm);
+  }
+
+  .updated {
+    color: var(--color-text-muted);
+    opacity: 0.8;
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+
+  .tag {
+    font-size: var(--font-size-xs);
+    color: var(--color-accent);
+    background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+  }
+
+  .cover-image {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-2xl);
+    border: 1px solid var(--color-border);
+  }
+
+  .post-footer {
+    margin-top: var(--space-3xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .back-link-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+</style>

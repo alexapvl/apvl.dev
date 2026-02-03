@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import BlogCard from "../../components/BlogCard.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("thoughts", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout
+  title="Thoughts | apvl.dev"
+  description="Blog posts about anything and everything."
+>
+  <section class="page">
+    <header class="page-header">
+      <h1 class="page-title">thoughts</h1>
+      <p class="page-description">random thoughts and ideas.</p>
+    </header>
+
+    {
+      posts.length === 0 ? (
+        <p class="empty-state">No posts yet. Check back soon!</p>
+      ) : (
+        <div class="posts-list">
+          {posts.map((post) => (
+            <BlogCard
+              title={post.data.title}
+              description={post.data.description}
+              pubDate={post.data.pubDate}
+              slug={post.slug}
+              tags={post.data.tags}
+            />
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .posts-list {
+    padding-left: var(--space-sm);
+  }
+</style>

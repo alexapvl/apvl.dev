@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404 | apvl.dev" description="Page not found.">
+  <section class="page">
+    <header class="page-header">
+      <h1 class="page-title">404 not found</h1>
+      <p class="page-description">
+        when in doubt, return <a href="/" class="home-link">/home</a>
+      </p>
+    </header>
+  </section>
+</BaseLayout>
+
+<style>
+  .home-link {
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    transition: opacity var(--transition-fast);
+  }
+
+  .home-link:hover {
+    opacity: 0.8;
+  }
+</style>

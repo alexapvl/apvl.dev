@@ -1,0 +1,407 @@
+---
+// Mobile navigation component with hamburger menu and bottom sheet
+// Only visible on mobile (< 640px)
+---
+
+<!-- Overlay backdrop -->
+<div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+
+<!-- Bottom sheet -->
+<div class="mobile-sheet" id="mobile-sheet">
+  <!-- Drag handle -->
+  <div class="sheet-handle">
+    <div class="handle-bar"></div>
+  </div>
+
+  <!-- Navigation links -->
+  <nav class="sheet-nav">
+    <a href="/" class="nav-link">home</a>
+    <a href="/thoughts" class="nav-link">thoughts</a>
+    <a href="/stuff" class="nav-link">stuff</a>
+  </nav>
+
+  <!-- Settings toggles -->
+  <div class="sheet-actions">
+    <button
+      class="action-btn off"
+      id="mobile-music-toggle"
+      aria-label="Toggle music"
+    >
+      <span class="action-text" id="mobile-music-text">music</span>
+    </button>
+    <button
+      class="action-btn"
+      id="mobile-theme-toggle"
+      aria-label="Toggle theme"
+    >
+      <span class="action-text" id="mobile-theme-text">dark</span>
+    </button>
+  </div>
+</div>
+
+<!-- Hamburger button -->
+<button
+  class="hamburger-btn"
+  id="hamburger-btn"
+  aria-label="Open menu"
+  aria-expanded="false"
+>
+  <div class="hamburger-lines">
+    <span class="line line-top"></span>
+    <span class="line line-middle"></span>
+    <span class="line line-bottom"></span>
+  </div>
+</button>
+
+<style>
+  /* Only show on mobile */
+  .mobile-nav-overlay,
+  .mobile-sheet,
+  .hamburger-btn {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    /* Overlay */
+    .mobile-nav-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      z-index: calc(var(--z-overlay) - 1);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 300ms ease-in-out;
+    }
+
+    .mobile-nav-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Bottom sheet */
+    .mobile-sheet {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: var(--z-overlay);
+      background: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--color-bg) 90%, transparent),
+        color-mix(in srgb, var(--color-bg) 70%, transparent)
+      );
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--color-border);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: var(--space-md) var(--space-xl) var(--space-2xl);
+      transform: translateY(100%);
+      transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .mobile-sheet.open {
+      transform: translateY(0);
+    }
+
+    .mobile-sheet.dragging {
+      transition: none;
+    }
+
+    /* Drag handle */
+    .sheet-handle {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-sm) 0 var(--space-lg);
+      cursor: grab;
+    }
+
+    .sheet-handle:active {
+      cursor: grabbing;
+    }
+
+    .handle-bar {
+      width: 36px;
+      height: 4px;
+      background-color: var(--color-text-muted);
+      border-radius: var(--radius-full);
+      opacity: 0.5;
+    }
+
+    /* Navigation */
+    .sheet-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .nav-link {
+      display: block;
+      padding: var(--space-md) var(--space-sm);
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+      background-color: var(--color-bg-secondary);
+      color: var(--color-accent);
+    }
+
+    /* Actions section */
+    .sheet-actions {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: var(--space-md) var(--space-sm);
+      font-family: inherit;
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+      background: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      background-color: var(--color-bg-secondary);
+    }
+
+    .action-text {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Strikethrough animation */
+    .action-text::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 2px;
+      background-color: var(--color-text);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 200ms ease;
+    }
+
+    .action-btn.off .action-text::after {
+      transform: scaleX(1);
+    }
+
+    .action-btn.off .action-text {
+      color: var(--color-text-muted);
+    }
+
+    /* Hamburger button */
+    .hamburger-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      width: 48px;
+      height: 48px;
+      z-index: calc(var(--z-overlay) + 1);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-bg) 95%, transparent),
+        color-mix(in srgb, var(--color-bg) 80%, transparent)
+      );
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border);
+      border-radius: 50%;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+    }
+
+    .hamburger-btn:hover {
+      transform: scale(1.05);
+      box-shadow:
+        var(--shadow-lg),
+        0 0 0 3px var(--color-border-subtle);
+    }
+
+    .hamburger-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Hamburger lines */
+    .hamburger-lines {
+      position: relative;
+      width: 20px;
+      height: 14px;
+    }
+
+    .line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--color-text);
+      border-radius: var(--radius-full);
+      transform-origin: center;
+      transition:
+        transform 300ms ease-out,
+        opacity 200ms ease-in-out;
+    }
+
+    .line-top {
+      top: 0;
+      transition-delay: 0s;
+    }
+
+    .line-middle {
+      top: 50%;
+      transform: translateY(-50%);
+      transition-delay: 0.1s;
+    }
+
+    .line-bottom {
+      bottom: 0;
+      transition-delay: 0s;
+    }
+
+    /* Hamburger open state (X) */
+    .hamburger-btn[aria-expanded="true"] .line-top {
+      transform: translateY(6px) rotate(45deg);
+      transition-delay: 0.1s;
+    }
+
+    .hamburger-btn[aria-expanded="true"] .line-middle {
+      opacity: 0;
+      transform: translateY(-50%) scale(0);
+      transition-delay: 0s;
+    }
+
+    .hamburger-btn[aria-expanded="true"] .line-bottom {
+      transform: translateY(-6px) rotate(-45deg);
+      transition-delay: 0.1s;
+    }
+  }
+</style>
+
+<script>
+  import { initMobileNav } from "../scripts/mobile-nav";
+  import * as musicPlayer from "../scripts/music-player";
+
+  // Store click handler references to remove duplicates
+  let musicClickHandler: (() => void) | null = null;
+  let themeClickHandler: (() => void) | null = null;
+
+  function initMusicToggle() {
+    const btnEl = document.getElementById("mobile-music-toggle");
+
+    if (!btnEl) return;
+
+    const btn = btnEl;
+
+    // Update UI based on current state
+    function updateUI() {
+      const isPlaying = musicPlayer.isPlaying();
+      // console.log(isPlaying);
+      btn.classList.toggle("off", !isPlaying);
+    }
+
+    // Initial state
+    updateUI();
+
+    // Remove existing handler if any
+    if (musicClickHandler) {
+      btn.removeEventListener("click", musicClickHandler);
+    }
+
+    // Create new handler
+    musicClickHandler = async () => {
+      await musicPlayer.toggle();
+      updateUI();
+    };
+
+    btn.addEventListener("click", musicClickHandler);
+
+    // Expose the global music player for other scripts
+    (window as any).musicPlayer = musicPlayer;
+  }
+
+  function initThemeToggle() {
+    const btnEl = document.getElementById("mobile-theme-toggle");
+    const textEl = document.getElementById("mobile-theme-text");
+
+    if (!btnEl || !textEl) return;
+
+    const btn = btnEl;
+    const text = textEl;
+
+    // Get current theme
+    function getCurrentTheme(): "light" | "dark" {
+      return (
+        (document.documentElement.getAttribute("data-theme") as
+          | "light"
+          | "dark") || "dark"
+      );
+    }
+
+    // Update UI based on current theme
+    function updateUI() {
+      const theme = getCurrentTheme();
+      text.textContent = theme;
+    }
+
+    // Initial state
+    updateUI();
+
+    // Remove existing handler if any
+    if (themeClickHandler) {
+      btn.removeEventListener("click", themeClickHandler);
+    }
+
+    // Create new handler
+    themeClickHandler = () => {
+      if (typeof (window as any).toggleTheme === "function") {
+        (window as any).toggleTheme();
+        updateUI();
+      }
+    };
+
+    btn.addEventListener("click", themeClickHandler);
+
+    // Listen for theme changes from elsewhere
+    window.addEventListener("themechange", updateUI);
+  }
+
+  function setup() {
+    initMobileNav();
+    initMusicToggle();
+    initThemeToggle();
+  }
+
+  // Initialize on page load
+  setup();
+
+  // Re-initialize on View Transitions navigation
+  document.addEventListener("astro:page-load", setup);
+</script>

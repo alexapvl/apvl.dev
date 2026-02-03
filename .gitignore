@@ -3,6 +3,10 @@ dist/
 
 # generated types
 .astro/
+.claude/
+.vscode/
+.cursor/
+.agents/
 
 # dependencies
 node_modules/

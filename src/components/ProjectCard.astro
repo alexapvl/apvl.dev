@@ -1,0 +1,140 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  year: number;
+  tech: string[];
+  github?: string;
+  slug: string;
+}
+
+const { title, description, year, tech, github, slug } = Astro.props;
+---
+
+<a href={`/stuff/${slug}`} class="project-card">
+  <div class="card-summary">
+    <div class="card-header">
+      <h3 class="card-title">{title}</h3>
+      <span class="card-year">{year}</span>
+    </div>
+    <p class="card-description">{description}</p>
+    <div class="card-tech">
+      {tech.map((t) => <span class="tech-pill">{t}</span>)}
+    </div>
+  </div>
+
+  <style>
+    .project-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background-color: color-mix(
+        in srgb,
+        var(--color-bg-secondary) 50%,
+        transparent
+      );
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+    }
+
+    .project-card:hover {
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-md);
+    }
+
+    .project-card[open] {
+      border-color: var(--color-accent);
+    }
+
+    .card-summary {
+      cursor: pointer;
+      padding: var(--space-lg);
+      list-style: none;
+      position: relative;
+    }
+
+    .card-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-sm);
+    }
+
+    .card-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .card-year {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .card-description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+      margin-bottom: var(--space-md);
+    }
+
+    .card-tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+
+    .tech-pill {
+      font-size: var(--font-size-xs);
+      color: var(--color-accent);
+      background-color: color-mix(
+        in srgb,
+        var(--color-accent) 10%,
+        transparent
+      );
+      padding: 2px var(--space-sm);
+      border-radius: var(--radius-full);
+    }
+
+    .card-details {
+      padding: 0 var(--space-lg) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+      margin-top: var(--space-md);
+      padding-top: var(--space-md);
+    }
+
+    .card-links {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: var(--font-size-sm);
+      color: var(--color-accent);
+      text-decoration: none;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--transition-fast);
+    }
+
+    .card-link:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-accent) 10%,
+        transparent
+      );
+    }
+  </style>
+</a>

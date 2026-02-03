@@ -1,0 +1,97 @@
+---
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const {
+  title = "Apavaloaiei Alexandru | apvl.dev",
+  description = "Personal corner of the internet",
+  image = "/og-image.jpg",
+} = Astro.props;
+const canonicalURL = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site)
+  : Astro.url;
+---
+
+<meta charset="UTF-8" />
+<ClientRouter />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{Astro.site && <link rel="canonical" href={canonicalURL} />}
+<meta name="generator" content={Astro.generator} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:site_name" content="apvl.dev" />
+<meta property="og:locale" content="en_US" />
+{image && <meta property="og:image" content={new URL(image, Astro.url)} />}
+{image && <meta property="og:image:width" content="1200" />}
+{image && <meta property="og:image:height" content="630" />}
+{image && <meta property="og:image:alt" content="apvl.dev preview" />}
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@alexapvl" />
+<meta name="twitter:creator" content="@alexapvl" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{image && <meta name="twitter:image" content={new URL(image, Astro.url)} />}
+{image && <meta name="twitter:image:alt" content="apvl.dev preview" />}
+
+<!-- JSON-LD Structured Data -->
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "apvl.dev",
+    url: "https://apvl.dev",
+    author: {
+      "@type": "Person",
+      name: "Alexandru Apavaloaiei",
+      url: "https://apvl.dev",
+      sameAs: [
+        "https://github.com/alexapvl",
+        "https://x.com/alexapvl",
+        "https://linkedin.com/in/alexapvl",
+      ],
+    },
+    description: "Personal corner of the internet",
+  })}
+/>
+
+<!-- Theme initialization (prevents FOUC) -->
+<script is:inline>
+  (function () {
+    function applyTheme() {
+      const stored = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      const theme = stored || (prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+
+    // Apply on initial load
+    applyTheme();
+
+    // Reapply after View Transitions swap (new document might not have data-theme)
+    document.addEventListener("astro:after-swap", applyTheme);
+  })();
+</script>

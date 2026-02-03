@@ -1,0 +1,130 @@
+---
+import SocialLinks from "./SocialLinks.astro";
+---
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-header">
+      <h1 class="hero-title">
+        <span class="greeting">hello, i'm</span>
+        <span class="name">alex</span>
+      </h1>
+      <svg class="signature" viewBox="0 0 265.21 287.08" aria-hidden="true">
+        <path
+          class="signature-path"
+          d="M29.32,286.69L65.02,13.22c11.35,33.6,29.87,82.3,59.08,138.12,35.37,67.59,64.75,104.23,54.02,116.11-6.62,7.33-20.34-3.05-110.27-35.78C30.1,217.93,3.24,209.11,3,195.49c-.08-4.63,2.97-6.65,17.1-20.9,30.25-30.51,35.08-40.24,42.24-38.41,5.58,1.43,6.5,8.33,15.71,35.56,10.12,29.91,15.27,44.87,19.96,44.96,11.47.22,19.22-66.1,26.09-65.37,6.82.73,3.82,57.29,10.23,58,3.94.43,9.85-20.5,16.24-50.13,2-1.48,4.73-3.19,8.22-4.56,5.36-2.11,10.16-2.5,13.29-2.49,30.2-48.29,60.4-96.57,90.59-144.86"
+          fill="none"
+          stroke="currentColor"
+          stroke-miterlimit="10"
+          stroke-width="6"></path>
+      </svg>
+    </div>
+    <p class="hero-description">
+      welcome to my personal corner of the internet.<br />
+      i enjoy building <a href="/stuff" class="hero-link">/stuff</a> and sharing my
+      <a href="/thoughts" class="hero-link">/thoughts</a>.
+    </p>
+    <SocialLinks class="hero-social" />
+  </div>
+</section>
+
+<style>
+  .hero {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-3xl) var(--space-lg);
+    padding-top: calc(20vh - 2rem);
+  }
+
+  .hero-content {
+    max-width: 600px;
+  }
+
+  .hero-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-sm);
+  }
+
+  .hero-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .hero-link {
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .hero-link:hover {
+    color: var(--color-accent);
+  }
+
+  .signature {
+    width: 60px;
+    height: auto;
+    color: var(--color-text);
+    flex-shrink: 0;
+  }
+
+  .signature-path {
+    stroke-dasharray: 1307;
+    stroke-dashoffset: 1307;
+    animation: draw-signature 1s forwards;
+  }
+
+  @keyframes draw-signature {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .greeting {
+    font-size: var(--font-size-lg);
+    font-weight: 400;
+    color: var(--color-text-secondary);
+  }
+
+  .name {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .hero-description {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-xl);
+  }
+
+  .hero-social {
+    justify-content: flex-start;
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding-top: calc(15vh - 1.5rem);
+    }
+
+    .hero-header {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+
+    .signature {
+      width: 60px;
+    }
+
+    .name {
+      font-size: var(--font-size-2xl);
+    }
+  }
+</style>
