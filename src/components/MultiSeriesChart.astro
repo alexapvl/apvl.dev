@@ -56,11 +56,29 @@ const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
   </div>
 </section>
 
-<script define:vars={{ chartId }}>
-  const chartRoot = document.getElementById(chartId);
-  if (!chartRoot) {
-    throw new Error("MultiSeriesChart root not found");
-  }
+<script>
+  // @ts-nocheck
+  const chartRuntime =
+    window.__multiSeriesChartRuntime ||
+    (window.__multiSeriesChartRuntime = {
+      cleanupMap: new Map(),
+      listenersBound: false,
+    });
+
+  const { cleanupMap } = chartRuntime;
+
+  const destroyChart = (chartRoot) => {
+    const destroy = cleanupMap.get(chartRoot);
+    if (!destroy) return;
+    destroy();
+  };
+
+  const initChart = (chartRoot) => {
+    if (!(chartRoot instanceof HTMLElement)) return;
+    if (chartRoot.dataset.chartInitialized === "true") return;
+    chartRoot.dataset.chartInitialized = "true";
+    const cleanups = [];
+    const addCleanup = (cleanup) => cleanups.push(cleanup);
 
   const points = JSON.parse(chartRoot.dataset.points || "[]");
   const series = JSON.parse(chartRoot.dataset.series || "[]");
@@ -285,9 +303,10 @@ const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
       updatePills(null);
     };
 
+    let hoveredPoint = null;
+
     const renderHoverLayer = () => {
       clear(hoverGroup);
-      let hoveredPoint = null;
 
       const hoverLine = document.createElementNS(
         "http://www.w3.org/2000/svg",
@@ -371,16 +390,25 @@ const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
         renderLines();
       };
 
-      hoverSurface.addEventListener("pointerdown", (event) => {
+      const onPointerDown = (event) => {
         hoverSurface.setPointerCapture(event.pointerId);
         update(event.clientX);
-      });
-      hoverSurface.addEventListener("pointermove", (event) =>
-        update(event.clientX),
-      );
+      };
+      const onPointerMove = (event) => update(event.clientX);
+
+      hoverSurface.addEventListener("pointerdown", onPointerDown);
+      hoverSurface.addEventListener("pointermove", onPointerMove);
       hoverSurface.addEventListener("pointerup", resetHover);
       hoverSurface.addEventListener("pointercancel", resetHover);
       hoverSurface.addEventListener("mouseleave", resetHover);
+
+      addCleanup(() => {
+        hoverSurface.removeEventListener("pointerdown", onPointerDown);
+        hoverSurface.removeEventListener("pointermove", onPointerMove);
+        hoverSurface.removeEventListener("pointerup", resetHover);
+        hoverSurface.removeEventListener("pointercancel", resetHover);
+        hoverSurface.removeEventListener("mouseleave", resetHover);
+      });
     };
 
     renderGrid();
@@ -390,7 +418,7 @@ const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
 
     const toggleButtons = chartRoot.querySelectorAll("[data-series-key]");
     toggleButtons.forEach((button) => {
-      button.addEventListener("click", () => {
+      const onToggleClick = () => {
         const seriesKey = button.getAttribute("data-series-key");
         if (!seriesKey) return;
 
@@ -406,8 +434,44 @@ const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
         if (hoveredPoint) {
           updatePills(hoveredPoint);
         }
+      };
+
+      button.addEventListener("click", onToggleClick);
+      addCleanup(() => {
+        button.removeEventListener("click", onToggleClick);
       });
     });
+
+    cleanupMap.set(chartRoot, () => {
+      cleanups.forEach((cleanup) => cleanup());
+      cleanups.length = 0;
+      cleanupMap.delete(chartRoot);
+      chartRoot.dataset.chartInitialized = "false";
+    });
+  }
+  };
+
+  const initAllCharts = () => {
+    const charts = document.querySelectorAll(".multi-series-chart");
+    charts.forEach((chartNode) => {
+      initChart(chartNode);
+    });
+  };
+
+  const cleanupAllCharts = () => {
+    cleanupMap.forEach((destroy) => destroy());
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAllCharts, { once: true });
+  } else {
+    initAllCharts();
+  }
+
+  if (!chartRuntime.listenersBound) {
+    document.addEventListener("astro:before-swap", cleanupAllCharts);
+    document.addEventListener("astro:page-load", initAllCharts);
+    chartRuntime.listenersBound = true;
   }
 </script>
 
