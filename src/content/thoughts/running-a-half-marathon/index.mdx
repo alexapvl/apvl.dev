@@ -1,0 +1,94 @@
+---
+title: "running 21km at 21 years old"
+description: "running is not just about physique"
+pubDate: 2026-04-05
+tags: ["running", "mentality"]
+---
+
+import MultiSeriesChart from "../../../components/MultiSeriesChart.astro";
+import {
+  halfMarathonData,
+  halfMarathonSeries,
+} from "../../../data/charts/running-a-half-marathon";
+
+I ran the Wizz Air Half Marathon in Cluj-Napoca on March 29, 2026.
+this one meant more than just a race.
+
+### why I signed up
+
+in January I saw that my gym membership was about to expire and I had a weird thought:
+life already gives us enough things we have to do.
+school, deadlines, random responsibilities.
+
+so I wanted to choose one hard thing on my own.
+something nobody forced me into.
+something that would scare me a little.
+signing up for this race felt like that first real self-challenge.
+
+### training (and the part that went wrong)
+
+my training block was around 7-8 weeks total.
+it was not perfect.
+
+in the last month, I missed 3 out of the last 4 weeks because of a tonsil intervention.
+I had mixed feelings the whole time.
+part of me knew I needed recovery.
+another part kept saying I would show up unprepared and fail.
+
+because I could not train physically, I tried to prepare mentally.
+I kept visualizing race day, the pain points, the breathing, the finish.
+it was not ideal, but it gave me calm when I needed it.
+
+### 24h before race day
+
+the day before the race, I treated it like a rehearsal.
+I woke up at the same time I planned to wake up on race day.
+I copied the routine on purpose: wake up, food timing, moving around, and trying to keep my head quiet.
+
+that 24h window helped me more than I expected.
+it made race morning feel familiar instead of chaotic.
+
+### race day
+
+the race itself was a fight between body signals and inner voice.
+my initial target was around 2:30.
+
+I finished in 2:11.
+
+that gap still surprises me.
+in the final part I realized I had more left than I thought.
+
+the hardest moment came after km 17.
+I stopped for a bathroom break, and after that my breathing got very fragile.
+I had to focus on taking air in a very controlled way, otherwise I felt like throwing up.
+to keep concentration, I started following the white road lane lines one by one.
+it sounds small, but that visual anchor kept me in the race.
+
+### finish line
+
+the crowd noise hit me first.
+then I looked around and saw all the people finishing around me.
+in my head there was one sentence on repeat:
+you did it.
+
+pride, accomplishment, surprise - all at once.
+and the best part is that I finished strong.
+
+### race metrics
+
+- x-axis: distance split (km 1 to 21.6)
+- y-axis: toggleable series (pace, heart rate, power, cadence)
+
+<MultiSeriesChart
+  title="Wizz Air Half Marathon - effort profile"
+  data={halfMarathonData}
+  xKey="distanceKm"
+  xLabel="distance split (km)"
+  series={halfMarathonSeries}
+/>
+
+if January me saw this result, he would not believe it.
+but I think this race proved one thing for me:
+if I choose the challenge myself, I commit differently.
+
+> The cave you fear to enter holds the treasure you seek. -- [Joseph Campbell](https://en.wikipedia.org/wiki/Joseph_Campbell)

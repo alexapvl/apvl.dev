@@ -1,0 +1,540 @@
+---
+type DataPoint = Record<string, number | string>;
+
+interface SeriesConfig {
+  key: string;
+  label: string;
+  unit?: string;
+  color: string;
+}
+
+interface Props {
+  data: DataPoint[];
+  xKey: string;
+  xLabel: string;
+  title?: string;
+  series: SeriesConfig[];
+}
+
+const { data, xKey, xLabel, title = "chart", series } = Astro.props;
+const chartId = `multi-series-chart-${Math.random().toString(36).slice(2, 10)}`;
+---
+
+<section
+  class="multi-series-chart"
+  id={chartId}
+  data-points={JSON.stringify(data)}
+  data-series={JSON.stringify(series)}
+  data-x-key={xKey}
+  data-x-label={xLabel}
+>
+  <h3>{title}</h3>
+
+  <div class="chart-wrapper">
+    <svg viewBox="0 0 860 420" role="img" aria-label={title}>
+      <g data-grid></g>
+      <g data-lines></g>
+      <g data-axis></g>
+      <g data-hover></g>
+    </svg>
+  </div>
+
+  <div class="series-toggles" role="group" aria-label="Toggle chart series">
+    {
+      series.map((entry) => (
+        <button
+          type="button"
+          data-series-key={entry.key}
+          aria-pressed="true"
+          style={`--series-color: ${entry.color};`}
+        >
+          <span class="series-label">{entry.label}</span>
+          <span class="series-value" data-series-value={entry.key} />
+        </button>
+      ))
+    }
+  </div>
+</section>
+
+<script define:vars={{ chartId }}>
+  const chartRoot = document.getElementById(chartId);
+  if (!chartRoot) {
+    throw new Error("MultiSeriesChart root not found");
+  }
+
+  const points = JSON.parse(chartRoot.dataset.points || "[]");
+  const series = JSON.parse(chartRoot.dataset.series || "[]");
+  const xKey = chartRoot.dataset.xKey;
+  const xLabel = chartRoot.dataset.xLabel || "x";
+
+  const svg = chartRoot.querySelector("svg");
+  const gridGroup = chartRoot.querySelector("[data-grid]");
+  const linesGroup = chartRoot.querySelector("[data-lines]");
+  const axisGroup = chartRoot.querySelector("[data-axis]");
+  const hoverGroup = chartRoot.querySelector("[data-hover]");
+  const valueNodes = chartRoot.querySelectorAll("[data-series-value]");
+
+  if (
+    !svg ||
+    !gridGroup ||
+    !linesGroup ||
+    !axisGroup ||
+    !hoverGroup ||
+    !valueNodes ||
+    !xKey ||
+    points.length === 0 ||
+    series.length === 0
+  ) {
+    valueNodes.forEach((node) => {
+      node.textContent = "--";
+    });
+  } else {
+    const width = 860;
+    const height = 420;
+    const padding = { top: 28, right: 32, bottom: 52, left: 52 };
+    const innerWidth = width - padding.left - padding.right;
+    const innerHeight = height - padding.top - padding.bottom;
+
+    const xValues = points.map((point) => Number(point[xKey]));
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const activeSeries = new Set(series.map((entry) => entry.key));
+
+    const ranges = Object.fromEntries(
+      series.map((entry) => {
+        const values = points.map((point) => Number(point[entry.key]));
+        return [
+          entry.key,
+          { min: Math.min(...values), max: Math.max(...values) },
+        ];
+      }),
+    );
+
+    const averages = Object.fromEntries(
+      series.map((entry) => {
+        const values = points.map((point) => Number(point[entry.key]));
+        const avg =
+          values.reduce((sum, value) => sum + value, 0) / values.length;
+        return [entry.key, avg];
+      }),
+    );
+
+    const xScale = (value) =>
+      padding.left + ((value - minX) / (maxX - minX || 1)) * innerWidth;
+
+    const yScale = (seriesKey, value) => {
+      const range = ranges[seriesKey];
+      const normalized = (value - range.min) / (range.max - range.min || 1);
+      return padding.top + (1 - normalized) * innerHeight;
+    };
+
+    const clear = (node) => {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    };
+
+    const formatPace = (minutesValue) => {
+      const paceMinutes = Math.floor(minutesValue);
+      const paceSeconds = Math.round((minutesValue - paceMinutes) * 60);
+      return `${paceMinutes}'${String(paceSeconds).padStart(2, "0")}''`;
+    };
+
+    const formatValue = (seriesInfo, pointValue, point) => {
+      if (
+        seriesInfo.key === "paceMinPerKm" &&
+        point &&
+        typeof point.paceLabel === "string"
+      ) {
+        return point.paceLabel;
+      }
+
+      const numericValue = Number(pointValue);
+      if (seriesInfo.key === "paceMinPerKm") {
+        return formatPace(numericValue);
+      }
+
+      const suffix = seriesInfo.unit ? seriesInfo.unit : "";
+      return `${numericValue.toFixed(0)}${suffix}`;
+    };
+
+    const updatePills = (point) => {
+      valueNodes.forEach((node) => {
+        const seriesKey = node.getAttribute("data-series-value");
+        if (!seriesKey) return;
+        const seriesInfo = series.find((entry) => entry.key === seriesKey);
+        if (!seriesInfo) return;
+
+        if (!point || !activeSeries.has(seriesKey)) {
+          const avgValue = averages[seriesKey];
+          node.textContent = `avg ${formatValue(seriesInfo, avgValue, null)}`;
+          return;
+        }
+
+        node.textContent = formatValue(seriesInfo, point[seriesKey], point);
+      });
+    };
+
+    const renderGrid = () => {
+      clear(gridGroup);
+      for (let i = 0; i <= 4; i += 1) {
+        const yPos = padding.top + (innerHeight / 4) * i;
+        const line = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "line",
+        );
+        line.setAttribute("x1", String(padding.left));
+        line.setAttribute("x2", String(width - padding.right));
+        line.setAttribute("y1", String(yPos));
+        line.setAttribute("y2", String(yPos));
+        line.setAttribute("stroke", "var(--color-border)");
+        line.setAttribute("stroke-width", "1");
+        line.setAttribute("opacity", "0.2");
+        gridGroup.appendChild(line);
+      }
+    };
+
+    const renderAxis = () => {
+      clear(axisGroup);
+
+      const xAxis = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+      xAxis.setAttribute("x1", String(padding.left));
+      xAxis.setAttribute("x2", String(width - padding.right));
+      xAxis.setAttribute("y1", String(height - padding.bottom));
+      xAxis.setAttribute("y2", String(height - padding.bottom));
+      xAxis.setAttribute("stroke", "var(--color-border)");
+      xAxis.setAttribute("stroke-width", "1");
+      axisGroup.appendChild(xAxis);
+
+      const yAxis = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+      yAxis.setAttribute("x1", String(padding.left));
+      yAxis.setAttribute("x2", String(padding.left));
+      yAxis.setAttribute("y1", String(padding.top));
+      yAxis.setAttribute("y2", String(height - padding.bottom));
+      yAxis.setAttribute("stroke", "var(--color-border)");
+      yAxis.setAttribute("stroke-width", "1");
+      axisGroup.appendChild(yAxis);
+
+      const xTickValues = [
+        ...new Set(points.map((point) => Number(point[xKey]))),
+      ].sort((a, b) => a - b);
+      xTickValues.forEach((xTickValue) => {
+        const xPos = xScale(xTickValue);
+        const label = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text",
+        );
+        label.setAttribute("x", String(xPos));
+        label.setAttribute("y", String(height - padding.bottom + 20));
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "10");
+        label.setAttribute("fill", "var(--color-text-muted)");
+        label.textContent = Number.isInteger(xTickValue)
+          ? String(xTickValue)
+          : xTickValue.toFixed(1);
+        axisGroup.appendChild(label);
+      });
+
+      const axisLabel = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+      );
+      axisLabel.setAttribute("x", String(width / 2));
+      axisLabel.setAttribute("y", String(height - 10));
+      axisLabel.setAttribute("text-anchor", "middle");
+      axisLabel.setAttribute("font-size", "12");
+      axisLabel.setAttribute("fill", "var(--color-text-muted)");
+      axisLabel.textContent = xLabel;
+      axisGroup.appendChild(axisLabel);
+    };
+
+    const renderLines = () => {
+      clear(linesGroup);
+      const activeKeys = series
+        .map((entry) => entry.key)
+        .filter((key) => activeSeries.has(key));
+
+      activeKeys.forEach((seriesKey) => {
+        const seriesInfo = series.find((entry) => entry.key === seriesKey);
+        if (!seriesInfo) return;
+
+        const d = points
+          .map((point, index) => {
+            const cmd = index === 0 ? "M" : "L";
+            return `${cmd} ${xScale(Number(point[xKey]))} ${yScale(seriesKey, Number(point[seriesKey]))}`;
+          })
+          .join(" ");
+
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", seriesInfo.color);
+        path.setAttribute("stroke-width", "2.25");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        linesGroup.appendChild(path);
+      });
+
+      updatePills(null);
+    };
+
+    const renderHoverLayer = () => {
+      clear(hoverGroup);
+      let hoveredPoint = null;
+
+      const hoverLine = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+      hoverLine.setAttribute("stroke", "var(--color-text-secondary)");
+      hoverLine.setAttribute("stroke-width", "1");
+      hoverLine.setAttribute("opacity", "0");
+      hoverGroup.appendChild(hoverLine);
+
+      const dots = {};
+      series.forEach((entry) => {
+        const dot = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle",
+        );
+        dot.setAttribute("r", "4");
+        dot.setAttribute("fill", entry.color);
+        dot.setAttribute("opacity", "0");
+        hoverGroup.appendChild(dot);
+        dots[entry.key] = dot;
+      });
+
+      const hoverSurface = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "rect",
+      );
+      hoverSurface.setAttribute("x", String(padding.left));
+      hoverSurface.setAttribute("y", String(padding.top));
+      hoverSurface.setAttribute("width", String(innerWidth));
+      hoverSurface.setAttribute("height", String(innerHeight));
+      hoverSurface.setAttribute("fill", "transparent");
+      hoverGroup.appendChild(hoverSurface);
+
+      const update = (clientX) => {
+        const rect = svg.getBoundingClientRect();
+        const svgX = ((clientX - rect.left) / rect.width) * width;
+        const clampedX = Math.max(
+          padding.left,
+          Math.min(width - padding.right, svgX),
+        );
+
+        let nearest = points[0];
+        let nearestDelta = Number.POSITIVE_INFINITY;
+        points.forEach((point) => {
+          const delta = Math.abs(xScale(Number(point[xKey])) - clampedX);
+          if (delta < nearestDelta) {
+            nearest = point;
+            nearestDelta = delta;
+          }
+        });
+
+        const xPos = xScale(Number(nearest[xKey]));
+        hoverLine.setAttribute("x1", String(xPos));
+        hoverLine.setAttribute("x2", String(xPos));
+        hoverLine.setAttribute("y1", String(padding.top));
+        hoverLine.setAttribute("y2", String(height - padding.bottom));
+        hoverLine.setAttribute("opacity", "0.8");
+
+        series.forEach((entry) => {
+          const dot = dots[entry.key];
+          if (!activeSeries.has(entry.key)) {
+            dot.setAttribute("opacity", "0");
+            return;
+          }
+
+          const yPos = yScale(entry.key, Number(nearest[entry.key]));
+          dot.setAttribute("cx", String(xPos));
+          dot.setAttribute("cy", String(yPos));
+          dot.setAttribute("opacity", "1");
+        });
+        hoveredPoint = nearest;
+        updatePills(nearest);
+      };
+
+      const resetHover = () => {
+        hoverLine.setAttribute("opacity", "0");
+        Object.values(dots).forEach((dot) => dot.setAttribute("opacity", "0"));
+        hoveredPoint = null;
+        updatePills(null);
+        renderLines();
+      };
+
+      hoverSurface.addEventListener("pointerdown", (event) => {
+        hoverSurface.setPointerCapture(event.pointerId);
+        update(event.clientX);
+      });
+      hoverSurface.addEventListener("pointermove", (event) =>
+        update(event.clientX),
+      );
+      hoverSurface.addEventListener("pointerup", resetHover);
+      hoverSurface.addEventListener("pointercancel", resetHover);
+      hoverSurface.addEventListener("mouseleave", resetHover);
+    };
+
+    renderGrid();
+    renderAxis();
+    renderLines();
+    renderHoverLayer();
+
+    const toggleButtons = chartRoot.querySelectorAll("[data-series-key]");
+    toggleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const seriesKey = button.getAttribute("data-series-key");
+        if (!seriesKey) return;
+
+        if (activeSeries.has(seriesKey)) {
+          activeSeries.delete(seriesKey);
+          button.setAttribute("aria-pressed", "false");
+        } else {
+          activeSeries.add(seriesKey);
+          button.setAttribute("aria-pressed", "true");
+        }
+
+        renderLines();
+        if (hoveredPoint) {
+          updatePills(hoveredPoint);
+        }
+      });
+    });
+  }
+</script>
+
+<style>
+  .multi-series-chart {
+    margin-top: var(--space-xl);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    background-color: color-mix(
+      in srgb,
+      var(--color-bg-secondary) 60%,
+      #0b1226 40%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .multi-series-chart h3 {
+    margin-top: 0;
+    margin-bottom: var(--space-md);
+    letter-spacing: 0.01em;
+  }
+
+  .series-toggles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    margin-bottom: 0;
+  }
+
+  .series-toggles button {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 0.52rem 0.82rem;
+    font-size: var(--font-size-xs);
+    background: color-mix(in srgb, var(--series-color) 8%, var(--color-bg));
+    color: var(--color-text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    white-space: nowrap;
+    width: 100%;
+    min-height: 2.8rem;
+    box-sizing: border-box;
+    overflow: visible;
+    border-color: color-mix(
+      in srgb,
+      var(--series-color) 45%,
+      var(--color-border)
+    );
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .series-label {
+    overflow: visible;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.01em;
+  }
+
+  .series-value {
+    display: inline-block;
+    min-width: auto;
+    max-width: none;
+    overflow: visible;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+    opacity: 0.95;
+  }
+
+  .series-toggles button[aria-pressed="true"] {
+    color: var(--color-text);
+    border-color: color-mix(
+      in srgb,
+      var(--series-color) 55%,
+      var(--color-border)
+    );
+    background: color-mix(in srgb, var(--series-color) 15%, var(--color-bg));
+  }
+
+  .series-toggles button:focus,
+  .series-toggles button:focus-visible,
+  .series-toggles button:active {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .chart-wrapper {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background:
+      radial-gradient(
+        120% 100% at 50% 0%,
+        rgba(42, 64, 110, 0.16) 0%,
+        rgba(11, 18, 38, 0) 70%
+      ),
+      color-mix(in srgb, var(--color-bg) 92%, #070b16 8%);
+    width: 100%;
+    padding: var(--space-xs);
+  }
+
+  .chart-wrapper svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    touch-action: none;
+  }
+
+  @media (max-width: 520px) {
+    .series-toggles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .series-toggles button {
+      padding: 0.46rem 0.62rem;
+      gap: 0.6rem;
+      min-height: 2.55rem;
+    }
+  }
+</style>
