@@ -4,7 +4,7 @@ import ProjectCard from "../../components/ProjectCard.astro";
 import { getCollection } from "astro:content";
 
 const projects = (await getCollection("stuff")).sort(
-  (a, b) => b.data.year - a.data.year
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 ---
 
@@ -29,7 +29,7 @@ const projects = (await getCollection("stuff")).sort(
                 <ProjectCard
                   title={project.data.title}
                   description={project.data.description}
-                  year={project.data.year}
+                  pubDate={project.data.pubDate}
                   tech={project.data.tech}
                   github={project.data.github}
                   slug={project.slug}

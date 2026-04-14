@@ -1,0 +1,25 @@
+---
+title: "meloDL"
+description: "native macOS app for downloading and converting audio with a clean, settings-first workflow"
+slug: "meloDL"
+pubDate: 2026-04-14
+github: "https://github.com/alexapvl/meloDL"
+tech: ["macos", "swift", "yt-dlp", "ffmpeg", "sparkle"]
+---
+
+`meloDL` is a native macOS app focused on downloading and converting audio with a clean workflow and practical defaults.
+
+### Features
+
+- **URL-to-audio flow** - accepts media URLs and downloads audio tracks
+- **Format and quality controls** - configurable output settings for conversion
+- **Playlist support** - handles playlist downloads with queue and status UI
+- **Metadata and thumbnail embedding** - can enrich downloaded files depending on output format
+- **Automatic binary update checks** - tracks updates for bundled `yt-dlp`, `ffmpeg`, and `ffprobe`
+
+### Technical Details
+
+- the app orchestrates bundled CLI tools (`yt-dlp`, `ffmpeg`, `ffprobe`) through Swift `Process` execution.
+- playlist URLs can be prefetched so multiple entries are processed as a managed queue.
+- tool updates are handled by a `GitHubUpdateService` that downloads and replaces binaries in Application Support, with versions tracked in `Application Support/meloDL/versions.json`.
+- app updates are managed with Sparkle via an `appcast.xml` feed configured by `SUFeedURL` in `Info.plist`.

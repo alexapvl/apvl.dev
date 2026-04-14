@@ -20,7 +20,7 @@ const stuff = defineCollection({
     z.object({
       title: z.string(),
       description: z.string(),
-      year: z.number(),
+      pubDate: z.coerce.date(),
       github: z.string().url().optional(),
       demo: z.string().url().optional(),
       tech: z.array(z.string()).default([]),

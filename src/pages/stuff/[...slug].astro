@@ -25,7 +25,7 @@ const { Content } = await project.render();
   <article class="page">
     <header class="page-header">
       <div class="project-meta">
-        <span class="project-year">{project.data.year}</span>
+        <span class="project-year">{project.data.pubDate.getFullYear()}</span>
       </div>
       <h1 class="page-title project-title">{project.data.title}</h1>
       <p class="page-description project-description">

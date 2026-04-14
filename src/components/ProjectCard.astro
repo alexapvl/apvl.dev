@@ -2,13 +2,14 @@
 interface Props {
   title: string;
   description: string;
-  year: number;
+  pubDate: Date;
   tech: string[];
   github?: string;
   slug: string;
 }
 
-const { title, description, year, tech, github, slug } = Astro.props;
+const { title, description, pubDate, tech, github, slug } = Astro.props;
+const year = pubDate.getFullYear();
 ---
 
 <a href={`/stuff/${slug}`} class="project-card">
