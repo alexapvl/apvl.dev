@@ -121,7 +121,7 @@ body {
   flex-direction: column;
   transition: background-color var(--transition-base), color var(--transition-base);
   text-align: left;
-  text-transform: lowercase;
+  /* text-transform: lowercase; */
 }
 
 /* Main content area - grows to push footer down */
