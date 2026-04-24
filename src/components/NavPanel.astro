@@ -144,6 +144,14 @@
     opacity: 1;
   }
 
+  /* Disable transitions while restoring persisted state after route swaps */
+  .nav-panel.state-sync .nav-keybinds,
+  .nav-panel.state-sync .nav-bottom,
+  .nav-panel.state-sync .label-collapsed,
+  .nav-panel.state-sync .label-expanded {
+    transition: none !important;
+  }
+
   kbd {
     display: inline-flex;
     align-items: center;

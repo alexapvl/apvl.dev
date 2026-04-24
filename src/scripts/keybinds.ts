@@ -6,7 +6,12 @@ export function initKeybinds() {
   if ((window as any).__keybindsInitialized) return;
   (window as any).__keybindsInitialized = true;
 
-  let navPanelExpanded = false;
+  type AppWindow = Window & {
+    __navPanelExpanded?: boolean;
+  };
+
+  const appWindow = window as AppWindow;
+  appWindow.__navPanelExpanded ??= false;
 
   // Get nav panel element fresh each time (DOM changes with View Transitions)
   function getNavPanel() {
@@ -16,7 +21,7 @@ export function initKeybinds() {
   function expandNavPanel() {
     const panel = getNavPanel();
     if (panel) {
-      navPanelExpanded = true;
+      appWindow.__navPanelExpanded = true;
       panel.classList.add("expanded");
     }
   }
@@ -24,26 +29,35 @@ export function initKeybinds() {
   function collapseNavPanel() {
     const panel = getNavPanel();
     if (panel) {
-      navPanelExpanded = false;
+      appWindow.__navPanelExpanded = false;
       panel.classList.remove("expanded");
     }
   }
 
   function toggleNavPanel() {
-    if (navPanelExpanded) {
+    if (appWindow.__navPanelExpanded) {
       collapseNavPanel();
     } else {
       expandNavPanel();
     }
   }
 
-  // Reset panel state after navigation (DOM is replaced)
-  document.addEventListener("astro:after-swap", () => {
-    navPanelExpanded = false;
-  });
+  function syncNavPanelState() {
+    const panel = getNavPanel();
+    if (!panel) return;
+
+    panel.classList.add("state-sync");
+    panel.classList.toggle("expanded", !!appWindow.__navPanelExpanded);
+    requestAnimationFrame(() => {
+      panel.classList.remove("state-sync");
+    });
+  }
 
   // Expose for external use
   (window as any).toggleNavPanel = toggleNavPanel;
+  syncNavPanelState();
+  document.addEventListener("astro:after-swap", syncNavPanelState);
+  document.addEventListener("astro:page-load", syncNavPanelState);
 
   document.addEventListener("keydown", (e) => {
     // Ignore if user is typing in an input
