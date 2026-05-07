@@ -12,8 +12,14 @@ tech: ["macos", "swift", "yt-dlp", "ffmpeg", "sparkle"]
 ### Features
 
 - **URL-to-audio flow** - accepts media URLs and downloads audio tracks
+- **Broad site support via yt-dlp** - works with many platforms (YouTube/YouTube Music, SoundCloud, TikTok, Instagram, X, and more)
 - **Format and quality controls** - configurable output settings for conversion
 - **Playlist support** - handles playlist downloads with queue and status UI
+- **Duplicate-aware downloads** - checks an indexed local library to prevent obvious re-downloads
+- **Advanced duplicate cleanup** - byte-level audio hashing for higher-confidence duplicate matching
+- **Rekordbox XML import** - improves duplicate matching for DJ-oriented libraries
+- **Staged cleanup sessions** - review and confirm duplicate actions before they are finalized
+- **Undo grace window** - short post-action undo period for smart cleanup operations
 - **Metadata and thumbnail embedding** - can enrich downloaded files depending on output format
 - **Automatic binary update checks** - tracks updates for bundled `yt-dlp`, `ffmpeg`, and `ffprobe`
 
@@ -21,5 +27,9 @@ tech: ["macos", "swift", "yt-dlp", "ffmpeg", "sparkle"]
 
 - the app orchestrates bundled CLI tools (`yt-dlp`, `ffmpeg`, `ffprobe`) through Swift `Process` execution.
 - playlist URLs can be prefetched so multiple entries are processed as a managed queue.
+- users can define library paths that are indexed for duplicate-aware download decisions.
+- duplicate resolution can use byte-level raw audio hashing for high-confidence matching.
+- rekordbox XML exports can be imported to assist duplicate matching in existing DJ libraries.
+- duplicate actions are staged for manual review before confirmation, with a short undo grace period after smart cleanup.
 - tool updates are handled by a `GitHubUpdateService` that downloads and replaces binaries in Application Support, with versions tracked in `Application Support/meloDL/versions.json`.
 - app updates are managed with Sparkle via an `appcast.xml` feed configured by `SUFeedURL` in `Info.plist`.
