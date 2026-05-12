@@ -140,8 +140,14 @@ Optional frontmatter:
 github: "https://github.com/..."
 demo: "https://..."
 tech: ["astro", "typescript"]
+collaborators:
+  - name: "Cristi"
+    url: "https://example.com"
+  - name: "Vasile"
 cover: "./cover.jpg"
 ```
+
+`collaborators` is only for `stuff` entries. Do not include Alex; the site already implies the post/project is his. Names render on project detail pages as `built alongside: ...`; `url` is optional and opens externally when present.
 
 Use MDX imports when a post needs local components or data, as in the half-marathon post importing `MultiSeriesChart` and chart data.
 

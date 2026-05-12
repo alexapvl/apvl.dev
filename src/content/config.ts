@@ -24,6 +24,14 @@ const stuff = defineCollection({
       github: z.string().url().optional(),
       demo: z.string().url().optional(),
       tech: z.array(z.string()).default([]),
+      collaborators: z
+        .array(
+          z.object({
+            name: z.string(),
+            url: z.string().url().optional(),
+          })
+        )
+        .default([]),
       cover: image().optional(),
     }),
 });
