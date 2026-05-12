@@ -105,9 +105,17 @@
 
 html {
   font-size: 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -183,22 +191,61 @@ pre code {
   color: var(--color-bg);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
+/* Overlay page scrollbar */
+.page-scrollbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-visualizer);
+  width: 8px;
+  pointer-events: none;
+}
+
+.page-scrollbar-thumb {
+  width: 100%;
+  min-height: 40px;
+  background-color: var(--color-text-muted);
+  border: 2px solid transparent;
+  border-radius: var(--radius-full);
+  background-clip: content-box;
+  opacity: 0.8;
+  pointer-events: auto;
+  cursor: grab;
+  transition:
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.page-scrollbar-thumb:hover {
+  background-color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.page-scrollbar-thumb:active {
+  cursor: grabbing;
+}
+
+/* Nested scroll areas */
+pre::-webkit-scrollbar,
+.prose pre::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+pre::-webkit-scrollbar-track,
+.prose pre::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+pre::-webkit-scrollbar-thumb,
+.prose pre::-webkit-scrollbar-thumb {
   background: var(--color-text-muted);
   border-radius: var(--radius-full);
 }
 
-::-webkit-scrollbar-thumb:hover {
+pre::-webkit-scrollbar-thumb:hover,
+.prose pre::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
 }
 

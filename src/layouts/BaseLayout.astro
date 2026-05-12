@@ -34,6 +34,7 @@ const { title, description, image } = Astro.props;
 <script>
   import { initTheme } from "../scripts/theme";
   import { initKeybinds } from "../scripts/keybinds";
+  import { initOverlayScrollbar } from "../scripts/overlay-scrollbar";
 
   // Check if device is mobile/touch-only
   function isMobileDevice(): boolean {
@@ -63,6 +64,7 @@ const { title, description, image } = Astro.props;
       initKeybinds();
     }
 
+    initOverlayScrollbar();
     setupExternalLinks();
   }
 
