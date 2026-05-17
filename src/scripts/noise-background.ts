@@ -374,11 +374,15 @@ export function initNoiseBackground(container: HTMLElement) {
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
 
-  // Update theme
+  // Smooth theme blending
+  let themeCurrent = material.uniforms.u_isDark.value as number;
+  let themeTarget = themeCurrent;
+  const themeLerpSpeed = 3.0; // ~300ms to settle
+
   function updateTheme() {
     const isDark =
       document.documentElement.getAttribute("data-theme") === "dark";
-    material.uniforms.u_isDark.value = isDark ? 1.0 : 0.0;
+    themeTarget = isDark ? 1.0 : 0.0;
   }
 
   // Handle resize
@@ -408,6 +412,11 @@ export function initNoiseBackground(container: HTMLElement) {
 
     const elapsed = (performance.now() - startTime) / 1000;
     const currentTime = timeOffset + elapsed * config.flowSpeed;
+
+    const dt = delta / 250;
+    themeCurrent +=
+      (themeTarget - themeCurrent) * (1 - Math.exp(-themeLerpSpeed * dt));
+    material.uniforms.u_isDark.value = themeCurrent;
 
     material.uniforms.u_time.value = currentTime;
     material.uniforms.u_audioLevel.value = smoothedLevel;

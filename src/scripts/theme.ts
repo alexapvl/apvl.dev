@@ -4,30 +4,41 @@ export function initTheme() {
   if ((window as any).__themeInitialized) return;
   (window as any).__themeInitialized = true;
 
+  type Theme = 'light' | 'dark';
+
   const getStoredTheme = (): 'light' | 'dark' | null => {
     return localStorage.getItem('theme') as 'light' | 'dark' | null;
   };
 
-  const getSystemTheme = (): 'light' | 'dark' => {
+  const getSystemTheme = (): Theme => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
 
-  const getCurrentTheme = (): 'light' | 'dark' => {
+  const getCurrentTheme = (): Theme => {
     return getStoredTheme() || getSystemTheme();
   };
 
-  const setTheme = (theme: 'light' | 'dark') => {
+  const setTheme = (theme: Theme, animate = false) => {
+    if (animate) {
+      document.documentElement.classList.add('theme-transitioning');
+    }
+
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
 
-    // Dispatch custom event for other components (e.g., WebGL gradient)
     window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+
+    if (animate) {
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+      }, 350);
+    }
   };
 
   const toggleTheme = () => {
     const current = getCurrentTheme();
     const next = current === 'dark' ? 'light' : 'dark';
-    setTheme(next);
+    setTheme(next, true);
   };
 
   // Listen for system theme changes
