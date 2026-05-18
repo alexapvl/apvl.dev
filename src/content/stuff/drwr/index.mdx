@@ -1,0 +1,38 @@
+---
+title: "drwr"
+description: "zero-dependency bottom sheet component with snap points, gestures and spring physics"
+pubDate: 2026-05-18
+github: "https://github.com/alexapvl/drwr"
+demo: "https://drwr.apvl.dev"
+tech: ["typescript", "vanilla js", "css", "tsup"]
+---
+
+[drwr](https://drwr.apvl.dev) is a small bottom sheet / drawer component I built because I wanted something reusable, dependency-free and easy to drop into any project.
+
+it works with any framework because it's written in vanilla JavaScript + CSS package and exposes a `Sheet` API for opening, closing, snapping and updating the sheet at runtime.
+
+the demo is intentionally simple: drag snap points around, change the layout and feel how the sheet behaves on both desktop and mobile environments.
+
+I took inspiration from [Emil Kowalski's vaul](https://vaul.emilkowal.ski/), especially the idea of making a sheet feel physical and gesture-driven instead of just sliding a panel in and out.
+
+### Features
+
+- **Zero dependencies** - works without pulling in a UI framework or gesture library
+- **Works with any setup** - usable from plain JavaScript or your frontend framework of choice
+- **Configurable snap points** - normalized snap points from closed to max height
+- **Spring physics** - animated movement with configurable damping and stiffness
+- **Velocity-aware gestures** - drag and flick interactions for touch and mouse
+- **Flexible layout controls** - configurable width, alignment, side padding and max width
+- **Accessible modal behavior** - Escape handling, overlay click handling, focus trap and ARIA options
+- **CSS custom property theming** - visual tokens are exposed through `--drwr-*` variables
+- **Runtime updates** - snap points, layout and options can be changed after initialization
+
+### Technical Details
+
+- the package is written in TypeScript and distributed as `@alexapvl/drwr` on npm.
+- it exports both the JavaScript entrypoint and `@alexapvl/drwr/style.css` through package exports.
+- the public API centers around a `Sheet` class with methods like `open`, `close`, `snapTo`, `refresh`, `setSnapPoints`, `setLayout`, `setOptions` and `destroy`.
+- snap point input is sanitized so the sheet can work with predictable normalized values.
+- non-zero default snap values initialize the full open state, including scroll lock and focus behavior.
+- the layout model supports centered, left-aligned and right-aligned sheets without requiring app-specific CSS.
+- the demo site is built with Vite and doubles as a compact playground for install commands, snap point controls and layout controls.
