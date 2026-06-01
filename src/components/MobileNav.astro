@@ -3,8 +3,9 @@
 // Only visible on mobile (< 640px)
 ---
 
-<!-- Sheet content container (drwr wraps this at runtime) -->
-<div id="mobile-sheet" hidden>
+<div id="mobile-nav" transition:persist="mobile-nav">
+  <!-- Sheet content container (drwr wraps this at runtime) -->
+  <div id="mobile-sheet" hidden>
   <nav class="sheet-nav">
     <a href="/" class="nav-link">home</a>
     <a href="/thoughts" class="nav-link">thoughts</a>
@@ -42,14 +43,20 @@
     <span class="line line-bottom"></span>
   </div>
 </button>
+</div>
 
 <style>
+  #mobile-nav,
   #mobile-sheet,
   .hamburger-btn {
     display: none;
   }
 
   @media (max-width: 640px) {
+    #mobile-nav {
+      display: contents;
+    }
+
     #mobile-sheet {
       display: block;
     }
@@ -228,7 +235,10 @@
 </style>
 
 <script>
-  import { initMobileNav, destroyMobileNav } from "../scripts/mobile-nav";
+  import {
+    initMobileNav,
+    syncMobileNavState,
+  } from "../scripts/mobile-nav";
   import * as musicPlayer from "../scripts/music-player";
 
   let musicClickHandler: (() => void) | null = null;
@@ -310,6 +320,6 @@
 
   setup();
 
-  document.addEventListener("astro:before-swap", destroyMobileNav);
+  document.addEventListener("astro:after-swap", syncMobileNavState);
   document.addEventListener("astro:page-load", setup);
 </script>

@@ -2,6 +2,7 @@
  * Mobile navigation — drwr sheet + hamburger trigger
  */
 
+import { navigate } from "astro:transitions/client";
 import { Sheet } from "@alexapvl/drwr";
 
 const MOBILE_QUERY = "(max-width: 640px)";
@@ -243,6 +244,70 @@ function handleHamburgerClick(): void {
   }
 }
 
+function handleNavLinkClick(event: Event): void {
+  const link = event.currentTarget as HTMLAnchorElement;
+  const href = link.getAttribute("href");
+  if (!href) return;
+
+  event.preventDefault();
+
+  const appWindow = window as MobileNavWindow;
+  const sheet = appWindow.__mobileNavSheet;
+  const targetPath = new URL(href, window.location.href).pathname;
+
+  syncHamburger(false);
+  if (sheet?.isOpen) {
+    sheet.close();
+  }
+
+  if (window.location.pathname !== targetPath) {
+    navigate(href);
+  }
+}
+
+function bindNavLinks(container: HTMLElement): void {
+  const navLinks = container.querySelectorAll(".nav-link");
+  navLinks.forEach((link) => {
+    link.removeEventListener("click", handleNavLinkClick);
+    link.addEventListener("click", handleNavLinkClick);
+  });
+}
+
+function createMobileNavSheet(container: HTMLElement): Sheet {
+  const sheet = new Sheet(container, {
+    snapPoints: [0, 1],
+    topPadding: SHEET_TOP_PADDING,
+    closeThreshold: SHEET_CLOSE_THRESHOLD,
+    dragHandle: true,
+    width: 95,
+    sidePadding: SHEET_SIDE_PADDING,
+    ariaLabel: "navigation",
+    onClose: () => syncHamburger(false),
+  });
+
+  const contentSnap = getContentSnapPoint(container);
+  sheet.setSnapPoints([0, contentSnap]);
+
+  bindSheetCloseSync(container);
+  bindDragCloseSync(container);
+
+  return sheet;
+}
+
+function refreshMobileNavSheet(container: HTMLElement, sheet: Sheet): void {
+  sheet.refresh();
+  const contentSnap = getContentSnapPoint(container);
+  sheet.setSnapPoints([0, contentSnap]);
+}
+
+export function syncMobileNavState(): void {
+  const appWindow = window as MobileNavWindow;
+  const sheet = appWindow.__mobileNavSheet;
+  if (!sheet) return;
+
+  syncHamburger(sheet.isOpen);
+}
+
 export function destroyMobileNav(): void {
   const appWindow = window as MobileNavWindow;
   const sheet = appWindow.__mobileNavSheet;
@@ -281,43 +346,14 @@ export function initMobileNav(): void {
 
   const appWindow = window as MobileNavWindow;
 
-  if (appWindow.__mobileNavSheet) {
-    destroyMobileNav();
+  if (!appWindow.__mobileNavSheet) {
+    appWindow.__mobileNavSheet = createMobileNavSheet(container);
+  } else {
+    refreshMobileNavSheet(container, appWindow.__mobileNavSheet);
   }
-
-  const sheet = new Sheet(container, {
-    snapPoints: [0, 1],
-    topPadding: SHEET_TOP_PADDING,
-    closeThreshold: SHEET_CLOSE_THRESHOLD,
-    dragHandle: true,
-    width: 95,
-    sidePadding: SHEET_SIDE_PADDING,
-    ariaLabel: "navigation",
-    onClose: () => syncHamburger(false),
-  });
-
-  const contentSnap = getContentSnapPoint(container);
-  sheet.setSnapPoints([0, contentSnap]);
-
-  appWindow.__mobileNavSheet = sheet;
-
-  bindSheetCloseSync(container);
-  bindDragCloseSync(container);
 
   hamburgerBtn.removeEventListener("click", handleHamburgerClick);
   hamburgerBtn.addEventListener("click", handleHamburgerClick);
-
-  const navLinks = container.querySelectorAll(".nav-link");
-  navLinks.forEach((link) => {
-    link.removeEventListener("click", handleNavLinkClick);
-    link.addEventListener("click", handleNavLinkClick);
-  });
-
-  syncHamburger(sheet.isOpen);
-}
-
-function handleNavLinkClick(): void {
-  syncHamburger(false);
-  const appWindow = window as MobileNavWindow;
-  appWindow.__mobileNavSheet?.close();
+  bindNavLinks(container);
+  syncMobileNavState();
 }
