@@ -1,216 +1,323 @@
 /**
- * Mobile navigation script
- * Handles hamburger menu toggle, bottom sheet animations, and touch gestures
- * Persists state across page navigations using localStorage
+ * Mobile navigation — drwr sheet + hamburger trigger
  */
 
-const NAV_STATE_KEY = "mobile-nav-open";
+import { Sheet } from "@alexapvl/drwr";
 
-let isOpen = false;
-let isDragging = false;
-let startY = 0;
-let currentY = 0;
-let sheetHeight = 0;
+const MOBILE_QUERY = "(max-width: 640px)";
+const SHEET_TOP_PADDING = 40;
+const SHEET_SIDE_PADDING = 16;
+const SHEET_CLOSE_THRESHOLD = 0.2;
+const SNAP_VELOCITY_THRESHOLD = 400;
+const SNAP_FLING_THRESHOLD = 1200;
 
-// Element references
-let hamburgerBtn: HTMLButtonElement | null = null;
-let sheet: HTMLElement | null = null;
-let overlay: HTMLElement | null = null;
+type MobileNavWindow = Window & {
+  __mobileNavSheet?: Sheet;
+  __mobileNavEscapeHandler?: (event: KeyboardEvent) => void;
+  __mobileNavDragSyncCleanup?: () => void;
+};
 
-/**
- * Get persisted nav state from localStorage
- */
-function getPersistedState(): boolean {
-  try {
-    return localStorage.getItem(NAV_STATE_KEY) === "true";
-  } catch {
-    return false;
+class VelocityTracker {
+  private samples: { time: number; value: number }[] = [];
+
+  reset(): void {
+    this.samples = [];
+  }
+
+  add(value: number): void {
+    this.samples.push({ time: performance.now(), value });
+    if (this.samples.length > 8) {
+      this.samples.shift();
+    }
+  }
+
+  getVelocity(): number {
+    if (this.samples.length < 2) return 0;
+
+    const last = this.samples[this.samples.length - 1];
+    let first = this.samples[0];
+
+    for (let i = this.samples.length - 2; i >= 0; i--) {
+      if (last.time - this.samples[i].time >= 30) {
+        first = this.samples[i];
+        break;
+      }
+    }
+
+    const deltaTime = (last.time - first.time) / 1000;
+    return deltaTime === 0 ? 0 : (last.value - first.value) / deltaTime;
   }
 }
 
-/**
- * Persist nav state to localStorage
- */
-function persistState(open: boolean): void {
-  try {
-    localStorage.setItem(NAV_STATE_KEY, open.toString());
-  } catch {
-    // Ignore localStorage errors
+/** Mirrors drwr's snap resolver (T in @alexapvl/drwr). */
+function resolveSnapTarget(
+  currentH: number,
+  velocity: number,
+  snapPixels: number[],
+): number {
+  if (snapPixels.length === 0) return currentH;
+  if (snapPixels.length === 1) return snapPixels[0];
+
+  const sorted = [...snapPixels].sort((a, b) => a - b);
+
+  if (Math.abs(velocity) > SNAP_FLING_THRESHOLD) {
+    return velocity > 0 ? sorted[sorted.length - 1] : sorted[0];
+  }
+
+  if (Math.abs(velocity) > SNAP_VELOCITY_THRESHOLD) {
+    if (velocity > 0) {
+      for (const point of sorted) {
+        if (point > currentH + 2) return point;
+      }
+      return sorted[sorted.length - 1];
+    }
+
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i] < currentH - 2) return sorted[i];
+    }
+    return sorted[0];
+  }
+
+  let closest = sorted[0];
+  let closestDistance = Math.abs(currentH - sorted[0]);
+
+  for (let i = 1; i < sorted.length; i++) {
+    const distance = Math.abs(currentH - sorted[i]);
+    if (distance < closestDistance) {
+      closest = sorted[i];
+      closestDistance = distance;
+    }
+  }
+
+  return closest;
+}
+
+/** Mirrors drwr's drag onEnd close decision. */
+function willCloseOnDragRelease(
+  currentH: number,
+  trackerVelocity: number,
+  snapPixels: number[],
+  closeThreshold: number,
+): boolean {
+  const velocity = -trackerVelocity;
+  let target = resolveSnapTarget(currentH, velocity, snapPixels);
+
+  const positiveSnaps = snapPixels.filter((px) => px > 0);
+  if (
+    positiveSnaps.length > 0 &&
+    currentH < positiveSnaps[0] * closeThreshold
+  ) {
+    target = 0;
+  }
+
+  return target <= 0.5;
+}
+
+function getHamburgerBtn(): HTMLButtonElement | null {
+  return document.getElementById("hamburger-btn") as HTMLButtonElement | null;
+}
+
+function syncHamburger(open: boolean): void {
+  const hamburgerBtn = getHamburgerBtn();
+  if (!hamburgerBtn) return;
+
+  hamburgerBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  hamburgerBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+}
+
+function getMaxSheetHeight(): number {
+  return Math.max(0, window.innerHeight - SHEET_TOP_PADDING);
+}
+
+function getContentSnapPoint(container: HTMLElement): number {
+  const contentEl = container.querySelector(".drwr-content");
+  const handleEl = container.querySelector(".drwr-handle");
+  const maxHeight = getMaxSheetHeight();
+
+  if (!contentEl || maxHeight <= 0) return 1;
+
+  const contentHeight =
+    contentEl.scrollHeight + (handleEl?.getBoundingClientRect().height ?? 0);
+
+  return Math.min(1, Math.max(0.15, contentHeight / maxHeight));
+}
+
+function getSnapPixels(container: HTMLElement): number[] {
+  const contentSnap = getContentSnapPoint(container);
+  const openHeight = contentSnap * getMaxSheetHeight();
+  return [0, openHeight].sort((a, b) => a - b);
+}
+
+function getSheetHeight(sheetEl: HTMLElement): number {
+  const styledHeight = parseFloat(sheetEl.style.height);
+  if (Number.isFinite(styledHeight) && styledHeight > 0) {
+    return styledHeight;
+  }
+
+  return sheetEl.getBoundingClientRect().height;
+}
+
+function bindDragCloseSync(container: HTMLElement): void {
+  const sheetEl = container.querySelector(".drwr-sheet");
+  if (!sheetEl) return;
+
+  const appWindow = window as MobileNavWindow;
+  appWindow.__mobileNavDragSyncCleanup?.();
+
+  const tracker = new VelocityTracker();
+
+  const onPointerDown = (event: PointerEvent) => {
+    tracker.reset();
+    tracker.add(event.clientY);
+  };
+
+  const onPointerMove = (event: PointerEvent) => {
+    if (sheetEl.getAttribute("data-dragging") !== "true") return;
+    tracker.add(event.clientY);
+  };
+
+  const onPointerUp = () => {
+    if (sheetEl.getAttribute("data-dragging") !== "true") {
+      tracker.reset();
+      return;
+    }
+
+    const currentH = getSheetHeight(sheetEl);
+    const willClose = willCloseOnDragRelease(
+      currentH,
+      tracker.getVelocity(),
+      getSnapPixels(container),
+      SHEET_CLOSE_THRESHOLD,
+    );
+
+    if (willClose) {
+      syncHamburger(false);
+    }
+
+    tracker.reset();
+  };
+
+  sheetEl.addEventListener("pointerdown", onPointerDown, true);
+  sheetEl.addEventListener("pointermove", onPointerMove, true);
+  sheetEl.addEventListener("pointerup", onPointerUp, true);
+  sheetEl.addEventListener("pointercancel", onPointerUp, true);
+
+  appWindow.__mobileNavDragSyncCleanup = () => {
+    sheetEl.removeEventListener("pointerdown", onPointerDown, true);
+    sheetEl.removeEventListener("pointermove", onPointerMove, true);
+    sheetEl.removeEventListener("pointerup", onPointerUp, true);
+    sheetEl.removeEventListener("pointercancel", onPointerUp, true);
+  };
+}
+
+function bindSheetCloseSync(container: HTMLElement): void {
+  const overlay = container.querySelector(".drwr-overlay");
+  overlay?.addEventListener("click", () => syncHamburger(false));
+
+  const appWindow = window as MobileNavWindow;
+
+  if (appWindow.__mobileNavEscapeHandler) {
+    document.removeEventListener("keydown", appWindow.__mobileNavEscapeHandler);
+  }
+
+  appWindow.__mobileNavEscapeHandler = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      syncHamburger(false);
+    }
+  };
+
+  document.addEventListener("keydown", appWindow.__mobileNavEscapeHandler);
+}
+
+function handleHamburgerClick(): void {
+  const appWindow = window as MobileNavWindow;
+  const sheet = appWindow.__mobileNavSheet;
+  if (!sheet) return;
+
+  if (sheet.isOpen) {
+    syncHamburger(false);
+    sheet.close();
+  } else {
+    syncHamburger(true);
+    sheet.open();
   }
 }
 
-/**
- * Initialize mobile navigation
- * Called on page load and after View Transitions
- */
+export function destroyMobileNav(): void {
+  const appWindow = window as MobileNavWindow;
+  const sheet = appWindow.__mobileNavSheet;
+  const hamburgerBtn = getHamburgerBtn();
+
+  if (hamburgerBtn) {
+    hamburgerBtn.removeEventListener("click", handleHamburgerClick);
+  }
+
+  if (appWindow.__mobileNavEscapeHandler) {
+    document.removeEventListener("keydown", appWindow.__mobileNavEscapeHandler);
+    appWindow.__mobileNavEscapeHandler = undefined;
+  }
+
+  appWindow.__mobileNavDragSyncCleanup?.();
+  appWindow.__mobileNavDragSyncCleanup = undefined;
+
+  if (sheet) {
+    sheet.destroy();
+    appWindow.__mobileNavSheet = undefined;
+  }
+}
+
 export function initMobileNav(): void {
-  // Get element references
-  hamburgerBtn = document.getElementById(
-    "hamburger-btn"
-  ) as HTMLButtonElement | null;
-  sheet = document.getElementById("mobile-sheet");
-  overlay = document.getElementById("mobile-nav-overlay");
-
-  if (!hamburgerBtn || !sheet || !overlay) {
+  if (!window.matchMedia(MOBILE_QUERY).matches) {
+    destroyMobileNav();
     return;
   }
 
-  // Restore persisted state instead of always closing
-  const persistedState = getPersistedState();
-  if (persistedState) {
-    openSheet();
-  } else {
-    closeSheet();
+  const container = document.getElementById("mobile-sheet");
+  const hamburgerBtn = getHamburgerBtn();
+
+  if (!container || !hamburgerBtn) {
+    return;
   }
 
-  // Remove existing listeners to prevent duplicates
-  hamburgerBtn.removeEventListener("click", handleToggle);
-  overlay.removeEventListener("click", handleClose);
+  const appWindow = window as MobileNavWindow;
 
-  // Add event listeners
-  hamburgerBtn.addEventListener("click", handleToggle);
-  overlay.addEventListener("click", handleClose);
+  if (appWindow.__mobileNavSheet) {
+    destroyMobileNav();
+  }
 
-  // Touch gestures for the sheet
-  sheet.removeEventListener("touchstart", handleTouchStart);
-  sheet.removeEventListener("touchmove", handleTouchMove);
-  sheet.removeEventListener("touchend", handleTouchEnd);
-
-  sheet.addEventListener("touchstart", handleTouchStart, { passive: true });
-  sheet.addEventListener("touchmove", handleTouchMove, { passive: false });
-  sheet.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-  // Close on link click (navigation)
-  const navLinks = sheet.querySelectorAll(".nav-link");
-  navLinks.forEach((link) => {
-    link.removeEventListener("click", handleClose);
-    link.addEventListener("click", handleClose);
+  const sheet = new Sheet(container, {
+    snapPoints: [0, 1],
+    topPadding: SHEET_TOP_PADDING,
+    closeThreshold: SHEET_CLOSE_THRESHOLD,
+    dragHandle: true,
+    width: 95,
+    sidePadding: SHEET_SIDE_PADDING,
+    ariaLabel: "navigation",
+    onClose: () => syncHamburger(false),
   });
 
-  // Close on escape key
-  document.removeEventListener("keydown", handleKeyDown);
-  document.addEventListener("keydown", handleKeyDown);
+  const contentSnap = getContentSnapPoint(container);
+  sheet.setSnapPoints([0, contentSnap]);
+
+  appWindow.__mobileNavSheet = sheet;
+
+  bindSheetCloseSync(container);
+  bindDragCloseSync(container);
+
+  hamburgerBtn.removeEventListener("click", handleHamburgerClick);
+  hamburgerBtn.addEventListener("click", handleHamburgerClick);
+
+  const navLinks = container.querySelectorAll(".nav-link");
+  navLinks.forEach((link) => {
+    link.removeEventListener("click", handleNavLinkClick);
+    link.addEventListener("click", handleNavLinkClick);
+  });
+
+  syncHamburger(sheet.isOpen);
 }
 
-/**
- * Toggle the menu open/closed
- */
-function handleToggle(): void {
-  if (isOpen) {
-    closeSheet();
-  } else {
-    openSheet();
-  }
-}
-
-/**
- * Open the bottom sheet
- */
-function openSheet(): void {
-  if (!hamburgerBtn || !sheet || !overlay) return;
-
-  isOpen = true;
-  hamburgerBtn.setAttribute("aria-expanded", "true");
-  hamburgerBtn.setAttribute("aria-label", "Close menu");
-  sheet.classList.add("open");
-  overlay.classList.add("active");
-
-  // Prevent body scroll when sheet is open
-  document.body.style.overflow = "hidden";
-
-  // Persist state
-  persistState(true);
-}
-
-/**
- * Close the bottom sheet
- */
-function closeSheet(): void {
-  if (!hamburgerBtn || !sheet || !overlay) return;
-
-  isOpen = false;
-  hamburgerBtn.setAttribute("aria-expanded", "false");
-  hamburgerBtn.setAttribute("aria-label", "Open menu");
-  sheet.classList.remove("open");
-  overlay.classList.remove("active");
-
-  // Restore body scroll
-  document.body.style.overflow = "";
-
-  // Reset any drag transform
-  sheet.style.transform = "";
-
-  // Persist state
-  persistState(false);
-}
-
-/**
- * Handle close action
- */
-function handleClose(): void {
-  closeSheet();
-}
-
-/**
- * Handle escape key
- */
-function handleKeyDown(e: KeyboardEvent): void {
-  if (e.key === "Escape" && isOpen) {
-    closeSheet();
-  }
-}
-
-/**
- * Handle touch start for drag gesture
- */
-function handleTouchStart(e: TouchEvent): void {
-  if (!sheet) return;
-
-  isDragging = true;
-  startY = e.touches[0].clientY;
-  currentY = startY;
-  sheetHeight = sheet.offsetHeight;
-  sheet.classList.add("dragging");
-}
-
-/**
- * Handle touch move for drag gesture
- */
-function handleTouchMove(e: TouchEvent): void {
-  if (!isDragging || !sheet) return;
-
-  currentY = e.touches[0].clientY;
-  const deltaY = currentY - startY;
-
-  // Only allow dragging down (positive delta) when sheet is open
-  if (deltaY > 0) {
-    // Prevent default to stop page scroll while dragging
-    e.preventDefault();
-
-    // Apply drag transform with resistance
-    const resistance = 0.6;
-    const translateY = deltaY * resistance;
-    sheet.style.transform = `translateY(${translateY}px)`;
-  }
-}
-
-/**
- * Handle touch end for drag gesture
- */
-function handleTouchEnd(): void {
-  if (!isDragging || !sheet) return;
-
-  isDragging = false;
-  sheet.classList.remove("dragging");
-
-  const deltaY = currentY - startY;
-  const threshold = sheetHeight * 0.3; // 30% of sheet height to trigger close
-
-  if (deltaY > threshold) {
-    // Close the sheet
-    closeSheet();
-  } else {
-    // Snap back to open position
-    sheet.style.transform = "";
-  }
+function handleNavLinkClick(): void {
+  syncHamburger(false);
+  const appWindow = window as MobileNavWindow;
+  appWindow.__mobileNavSheet?.close();
 }

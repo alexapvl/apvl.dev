@@ -68,7 +68,7 @@ pnpm preview
 - `BlogCard.astro`: timeline-style card for thought posts.
 - `ProjectCard.astro`: compact project card for the `stuff` listing.
 - `NavPanel.astro`: desktop keyboard-navigation panel shown above the bottom-right nav bar.
-- `MobileNav.astro`: mobile hamburger button, overlay, bottom sheet navigation, theme toggle, music toggle, and drag-to-close gesture.
+- `MobileNav.astro`: mobile hamburger button, `@alexapvl/drwr` bottom sheet navigation, theme toggle, and music toggle.
 - `NoiseBackground.astro`: persistent full-screen WebGL background connected to music-player audio levels.
 - `MultiSeriesChart.astro`: interactive SVG chart used inside MDX posts.
 
@@ -87,7 +87,7 @@ Current browser modules:
 
 - `theme.ts`: light/dark theme, localStorage persistence, global `toggleTheme`, and `themechange` event.
 - `keybinds.ts`: desktop shortcuts and view-transition navigation.
-- `mobile-nav.ts`: mobile bottom sheet state, gestures, escape handling, and localStorage persistence.
+- `mobile-nav.ts`: mobile hamburger trigger wired to `@alexapvl/drwr` sheet open/close.
 - `music-player.ts`: lazy AudioContext setup, persistent audio element, analyser data, and audio callbacks.
 - `noise-background.ts`: Three.js shader background, theme response, audio response, resize handling, and cleanup.
 
