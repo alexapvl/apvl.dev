@@ -14,6 +14,7 @@ const SNAP_FLING_THRESHOLD = 1200;
 
 type MobileNavWindow = Window & {
   __mobileNavSheet?: Sheet;
+  __mobileNavOpen?: boolean;
   __mobileNavEscapeHandler?: (event: KeyboardEvent) => void;
   __mobileNavDragSyncCleanup?: () => void;
 };
@@ -119,6 +120,9 @@ function getHamburgerBtn(): HTMLButtonElement | null {
 }
 
 function syncHamburger(open: boolean): void {
+  const appWindow = window as MobileNavWindow;
+  appWindow.__mobileNavOpen = open;
+
   const hamburgerBtn = getHamburgerBtn();
   if (!hamburgerBtn) return;
 
@@ -230,12 +234,18 @@ function bindSheetCloseSync(container: HTMLElement): void {
   document.addEventListener("keydown", appWindow.__mobileNavEscapeHandler);
 }
 
+function handleSheetClose(): void {
+  syncHamburger(false);
+}
+
 function handleHamburgerClick(): void {
   const appWindow = window as MobileNavWindow;
   const sheet = appWindow.__mobileNavSheet;
   if (!sheet) return;
 
-  if (sheet.isOpen) {
+  const isOpen = appWindow.__mobileNavOpen ?? false;
+
+  if (isOpen) {
     syncHamburger(false);
     sheet.close();
   } else {
@@ -281,8 +291,9 @@ function createMobileNavSheet(container: HTMLElement): Sheet {
     dragHandle: true,
     width: 95,
     sidePadding: SHEET_SIDE_PADDING,
+    trapFocus: false,
     ariaLabel: "navigation",
-    onClose: () => syncHamburger(false),
+    onClose: handleSheetClose,
   });
 
   const contentSnap = getContentSnapPoint(container);
@@ -302,10 +313,8 @@ function refreshMobileNavSheet(container: HTMLElement, sheet: Sheet): void {
 
 export function syncMobileNavState(): void {
   const appWindow = window as MobileNavWindow;
-  const sheet = appWindow.__mobileNavSheet;
-  if (!sheet) return;
-
-  syncHamburger(sheet.isOpen);
+  appWindow.__mobileNavOpen ??= false;
+  syncHamburger(appWindow.__mobileNavOpen);
 }
 
 export function destroyMobileNav(): void {
@@ -329,6 +338,8 @@ export function destroyMobileNav(): void {
     sheet.destroy();
     appWindow.__mobileNavSheet = undefined;
   }
+
+  appWindow.__mobileNavOpen = undefined;
 }
 
 export function initMobileNav(): void {
