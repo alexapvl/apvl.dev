@@ -1,0 +1,32 @@
+---
+title: "Brainlock"
+description: "macOS menu bar app that blocks distracting sites on your schedule — system-wide, even after you quit"
+pubDate: 2026-06-16
+demo: "https://brainlock.apvl.dev"
+tech: ["macos", "swift", "swiftui", "sparkle", "xpc"]
+---
+
+[Brainlock](https://brainlock.apvl.dev) is a macOS menu bar app that blocks distracting websites on the schedule you set. It lives quietly in the menu bar, enforces your focus windows even after you quit, and asks for a deliberate step before you override that schedule.
+
+It started with an AppleScript I ran from the terminal to block and unblock sites. It worked, but the friction was wrong in both directions — too much effort for day-to-day use, and not enough beyond a simple block/unblock toggle. Updating the schedule meant editing files by hand. Brainlock is what I wanted instead: a menu bar app that keeps the blocking at the system level, makes the schedule easy to change, and asks for a deliberate step when you choose to override it.
+
+### Features
+
+- **Hard blocking** — sites are blocked at the `/etc/hosts` level, not with a browser extension you can click away
+- **Free windows** — recurring periods when sites stay open, by time range and weekday; overlapping windows blend together automatically
+- **Timed unlocks** — choose to unlock for 15m / 30m / 1h / 2h, a custom duration, or until tomorrow; re-locks when the timer runs out
+- **Touch ID gate** — unlocking outside a free window requires Touch ID (or your Mac password), so you pause and decide before the block lifts
+- **Brain Guard daemon** — a privileged helper keeps rules enforced even when the app is closed
+- **Event-driven scheduling** — no constant polling; state flips exactly at schedule boundaries and unlock expiries
+- **Launch at login** — runs automatically after login
+- **One-time purchase** — 7-day free trial, then pay once; no subscription
+
+### Technical Details
+
+- the menu bar app is SwiftUI on macOS 26+ with Swift 6.
+- Brain Guard is a privileged helper daemon registered via `SMAppService`; it writes blocklist entries to `/etc/hosts` and stays running through `launchd` even when Brainlock is quit.
+- the app talks to the helper over XPC (`NSXPCConnection` / `BrainlockHelperProtocol`) for lock, unlock, config sync, and status checks.
+- schedule enforcement is event-driven — timers fire at free-window boundaries and unlock expiries instead of polling.
+- unlocks outside free windows go through `LocalAuthentication` (Touch ID with password fallback) to create a deliberate pause before the block lifts.
+- licensing is handled with Lemon Squeezy; app updates ship through Sparkle via an `appcast.xml` feed.
+- on first launch, Brainlock cleans up the legacy `com.brainrot.blocker` LaunchDaemon if it's still around.
