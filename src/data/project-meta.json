@@ -9,9 +9,9 @@
       "lastCommitMessage": "fix yt-dlp binary updates"
     },
     "personal-portfolio": {
-      "pushedAt": "2026-07-10T14:03:39Z",
-      "lastCommitMessage": "docs: trim AGENTS.md and add CLAUDE.md symlink for agent portability"
+      "pushedAt": "2026-07-10T21:54:52Z",
+      "lastCommitMessage": "feat: add live project meta, filters, and build-time GitHub fetch on stuff"
     }
   },
-  "fetchedAt": "2026-07-10T21:50:51.140Z"
+  "fetchedAt": "2026-07-10T21:55:05.241Z"
 }
