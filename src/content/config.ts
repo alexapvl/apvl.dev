@@ -32,6 +32,10 @@ const stuff = defineCollection({
           })
         )
         .default([]),
+      role: z
+        .enum(["owner", "maintainer", "contributor", "client-work"])
+        .default("owner"),
+      lastTouched: z.coerce.date().optional(),
       cover: image().optional(),
     }),
 });

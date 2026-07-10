@@ -1,10 +1,26 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ProjectCard from "../../components/ProjectCard.astro";
+import { projectMeta } from "../../data/project-meta";
+import { getActivityTimestamp, PROJECT_ROLES } from "../../utils/project-status";
 import { getCollection } from "astro:content";
 
 const projects = (await getCollection("stuff")).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+  (a, b) =>
+    getActivityTimestamp(
+      b.data.pubDate,
+      b.data.lastTouched,
+      projectMeta[b.slug]
+    ) -
+    getActivityTimestamp(
+      a.data.pubDate,
+      a.data.lastTouched,
+      projectMeta[a.slug]
+    )
+);
+
+const rolesInUse = PROJECT_ROLES.filter((role) =>
+  projects.some((project) => project.data.role === role)
 );
 ---
 
@@ -12,52 +28,182 @@ const projects = (await getCollection("stuff")).sort(
   title="Stuff | apvl.dev"
   description="Projects and software I've built or contributed to building."
 >
-  <section class="page">
+  <section
+    class="page"
+    data-stuff-filters
+    data-stuff-roles={rolesInUse.join(",")}
+  >
     <header class="page-header">
       <h1 class="page-title">stuff</h1>
       <p class="page-description">it all started with a 'what if?'.</p>
+
+      {
+        projects.length > 0 && (
+          <nav class="stuff-toolbar" aria-label="sort and filter projects">
+            <button
+              type="button"
+              class="toolbar-btn"
+              data-stuff-sort="updated"
+              aria-pressed="true"
+            >
+              updated
+            </button>
+            <span class="toolbar-sep" aria-hidden="true">·</span>
+            <button
+              type="button"
+              class="toolbar-btn"
+              data-stuff-sort="shipped"
+              aria-pressed="false"
+            >
+              shipped
+            </button>
+            <span class="toolbar-sep toolbar-sep--break" aria-hidden="true">|</span>
+            <button
+              type="button"
+              class="toolbar-btn"
+              data-stuff-role="all"
+              aria-pressed="true"
+            >
+              all
+            </button>
+            {
+              rolesInUse.map((role) => (
+                <>
+                  <span class="toolbar-sep" aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    class="toolbar-btn"
+                    data-stuff-role={role}
+                    aria-pressed="false"
+                  >
+                    {role}
+                  </button>
+                </>
+              ))
+            }
+          </nav>
+        )
+      }
     </header>
 
     {
       projects.length === 0 ? (
         <p class="empty-state">Nothing here yet. Check back soon!</p>
       ) : (
-        <>
-          <section class="stuff-section">
-            <div class="stuff-grid">
-              {projects.map((project) => (
-                <ProjectCard
-                  title={project.data.title}
-                  description={project.data.description}
-                  pubDate={project.data.pubDate}
-                  tech={project.data.tech}
-                  github={project.data.github}
-                  slug={project.slug}
-                />
-              ))}
-            </div>
-          </section>
-        </>
+        <section class="stuff-section">
+          <div class="stuff-grid" data-stuff-grid>
+            {
+              projects.map((project) => (
+                <div
+                  class="stuff-item"
+                  data-stuff-item
+                  data-role={project.data.role}
+                  data-pub-date={project.data.pubDate.valueOf()}
+                  data-active-date={getActivityTimestamp(
+                    project.data.pubDate,
+                    project.data.lastTouched,
+                    projectMeta[project.slug]
+                  )}
+                >
+                  <ProjectCard
+                    title={project.data.title}
+                    description={project.data.description}
+                    pubDate={project.data.pubDate}
+                    tech={project.data.tech}
+                    github={project.data.github}
+                    slug={project.slug}
+                    role={project.data.role}
+                    lastTouched={project.data.lastTouched}
+                    repoMeta={projectMeta[project.slug]}
+                  />
+                </div>
+              ))
+            }
+          </div>
+
+          <p class="empty-state stuff-empty" data-stuff-empty hidden>
+            no projects match this filter.
+          </p>
+        </section>
       )
     }
   </section>
 </BaseLayout>
 
-<style>
-  .stuff-section {
-    margin-bottom: var(--space-2xl);
+<script>
+  import { initStuffFilters } from "../../scripts/stuff-filters";
+
+  function setup() {
+    initStuffFilters();
   }
 
-  .section-title {
-    font-size: var(--font-size-xl);
-    font-weight: 600;
-    color: var(--color-text);
+  setup();
+  document.addEventListener("astro:page-load", setup);
+</script>
+
+<style>
+  .page-header:has(.stuff-toolbar) {
     margin-bottom: var(--space-lg);
+  }
+
+  .page-description {
+    margin-bottom: 0;
+  }
+
+  .stuff-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.28em;
+    margin-top: 0.4em;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.3;
+  }
+
+  .toolbar-sep {
+    font-size: 1.2em;
+    opacity: 0.4;
+    user-select: none;
+  }
+
+  .toolbar-sep--break {
+    font-size: 1em;
+    opacity: 0.35;
+    margin: 0 0.1em;
+  }
+
+  .toolbar-btn {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: var(--color-text-muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+
+  .toolbar-btn:hover {
+    color: var(--color-text-secondary);
+  }
+
+  .toolbar-btn.is-active {
+    color: var(--color-accent);
+  }
+
+  .stuff-section {
+    margin-bottom: var(--space-2xl);
   }
 
   .stuff-grid {
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
+  }
+
+  .stuff-empty {
+    margin-top: var(--space-lg);
   }
 </style>

@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "drwr": {
+      "pushedAt": "2026-05-18T19:36:30Z",
+      "lastCommitMessage": "improved demo UI"
+    },
+    "meloDL": {
+      "pushedAt": "2026-05-10T16:29:06Z",
+      "lastCommitMessage": "fix yt-dlp binary updates"
+    },
+    "personal-portfolio": {
+      "pushedAt": "2026-07-10T14:03:39Z",
+      "lastCommitMessage": "docs: trim AGENTS.md and add CLAUDE.md symlink for agent portability"
+    }
+  },
+  "fetchedAt": "2026-07-10T21:50:51.140Z"
+}

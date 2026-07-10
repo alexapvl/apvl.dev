@@ -1,0 +1,205 @@
+---
+import type { ProjectRepoMeta } from "../data/project-meta";
+import type { ProjectRole } from "../utils/project-status";
+import { getProjectStatusContext } from "../utils/project-status";
+
+interface Props {
+  role: ProjectRole;
+  lastTouched?: Date;
+  github?: string;
+  repoMeta?: ProjectRepoMeta;
+  variant?: "card" | "page";
+  showActivity?: boolean;
+  showMeta?: boolean;
+  showCommit?: boolean;
+}
+
+const {
+  role,
+  lastTouched,
+  github,
+  repoMeta,
+  variant = "card",
+  showActivity = true,
+  showMeta = true,
+  showCommit = true,
+} = Astro.props;
+const { activityLabel, commitUrl } = getProjectStatusContext({
+  lastTouched,
+  github,
+  repoMeta,
+});
+
+const hasCommit = showCommit && Boolean(repoMeta?.lastCommitMessage && commitUrl);
+const hasMeta =
+  showMeta ||
+  (!showMeta && activityLabel && showActivity);
+---
+
+{
+  (hasMeta || hasCommit) && (
+    <div class="project-status" data-variant={variant}>
+  {
+    showMeta &&
+      ((activityLabel && showActivity) ? (
+        <p class="status-meta">
+          <span class="status-role">{role}</span>
+          <span class="status-sep" aria-hidden="true">
+            ·
+          </span>
+          <span class="status-activity">{activityLabel}</span>
+        </p>
+      ) : (
+        <p class="status-meta">
+          <span class="status-role">{role}</span>
+        </p>
+      ))
+  }
+
+  {
+    !showMeta && activityLabel && showActivity && (
+      <p class="status-meta">
+        <span class="status-activity">{activityLabel}</span>
+      </p>
+    )
+  }
+
+  {
+    hasCommit && (
+      <a
+        href={commitUrl}
+        class="status-commit"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`view commit history on GitHub — latest: ${repoMeta.lastCommitMessage}`}
+      >
+        <svg
+          class="status-commit-icon"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="8" cy="8" r="2.25" fill="currentColor" stroke="none" />
+          <path d="M8 2.5v2.25M8 11.25V13.5" />
+        </svg>
+        <span
+          class="status-commit-message"
+          title={repoMeta.lastCommitMessage}
+        >
+          {repoMeta.lastCommitMessage}
+        </span>
+      </a>
+      )
+    }
+    </div>
+  )
+}
+
+<style>
+  .project-status {
+    min-width: 0;
+  }
+
+  .project-status[data-variant="card"] {
+    margin: 0 var(--space-lg) var(--space-md);
+  }
+
+  .project-status[data-variant="card"] .status-meta {
+    margin-bottom: var(--space-xs);
+  }
+
+  .project-status[data-variant="card"] .status-commit {
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .project-status[data-variant="page"] .status-meta {
+    margin-bottom: var(--space-sm);
+  }
+
+  .project-status[data-variant="page"] .status-commit {
+    margin-bottom: 0;
+  }
+
+  .project-status[data-variant="page"]:has(.status-commit:only-child) {
+    margin-top: var(--space-sm);
+  }
+
+  .status-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35em;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+  }
+
+  .project-status[data-variant="page"] .status-meta {
+    font-size: var(--font-size-sm);
+  }
+
+  .status-role {
+    color: var(--color-text-secondary);
+  }
+
+  .status-sep {
+    opacity: 0.55;
+  }
+
+  .status-commit {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-left: calc(-1 * var(--space-sm));
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    text-decoration: none;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .project-status[data-variant="page"] .status-commit {
+    font-size: var(--font-size-sm);
+  }
+
+  .status-commit:hover {
+    color: var(--color-accent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-accent) 8%,
+      transparent
+    );
+  }
+
+  .status-commit:hover .status-commit-icon {
+    color: var(--color-accent);
+  }
+
+  .status-commit-icon {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: color var(--transition-fast);
+  }
+
+  .status-commit-message {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

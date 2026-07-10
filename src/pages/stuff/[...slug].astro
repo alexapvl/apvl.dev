@@ -1,6 +1,8 @@
 ---
 import { getCollection, type CollectionEntry } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectStatus from "../../components/ProjectStatus.astro";
+import { projectMeta } from "../../data/project-meta";
 import "../../styles/prose.css";
 
 export async function getStaticPaths() {
@@ -15,6 +17,8 @@ type Props = CollectionEntry<"stuff">;
 
 const project = Astro.props;
 const { Content } = await project.render();
+const year = project.data.pubDate.getFullYear();
+const repoMeta = projectMeta[project.slug];
 ---
 
 <BaseLayout
@@ -24,10 +28,25 @@ const { Content } = await project.render();
 >
   <article class="page">
     <header class="page-header">
-      <div class="project-meta">
-        <span class="project-year">{project.data.pubDate.getFullYear()}</span>
+      <div class="project-title-row">
+        <h1 class="page-title project-title">
+          <span class="project-title-text">{project.data.title}</span>
+          <span class="project-title-sep" aria-hidden="true">·</span>
+          <span class="project-role">{project.data.role}</span>
+        </h1>
+        <span class="project-year">{year}</span>
       </div>
-      <h1 class="page-title project-title">{project.data.title}</h1>
+
+      <ProjectStatus
+        role={project.data.role}
+        lastTouched={project.data.lastTouched}
+        github={project.data.github}
+        repoMeta={repoMeta}
+        variant="page"
+        showMeta={false}
+        showCommit={false}
+      />
+
       <p class="page-description project-description">
         {project.data.description}
       </p>
@@ -106,6 +125,16 @@ const { Content } = await project.render();
           )
         }
       </div>
+
+      <ProjectStatus
+        role={project.data.role}
+        lastTouched={project.data.lastTouched}
+        github={project.data.github}
+        repoMeta={repoMeta}
+        variant="page"
+        showMeta={false}
+        showActivity={false}
+      />
     </header>
 
     {
@@ -127,21 +156,46 @@ const { Content } = await project.render();
 </BaseLayout>
 
 <style>
-  .project-meta {
+  .project-title-row {
     display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
     margin-top: calc(-1 * var(--space-xl));
     margin-bottom: var(--space-sm);
   }
 
   .project-year {
+    flex-shrink: 0;
     font-size: var(--font-size-sm);
     color: var(--color-text-muted);
+    padding-top: 0.35em;
   }
 
   .project-title {
-    margin-bottom: var(--space-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35em;
+    margin-bottom: 0;
+    min-width: 0;
+    line-height: var(--leading-tight);
+  }
+
+  .project-title-text {
+    font-weight: 600;
+  }
+
+  .project-title-sep {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    opacity: 0.55;
+  }
+
+  .project-role {
+    font-size: inherit;
+    font-weight: 400;
+    color: var(--color-text-secondary);
   }
 
   .project-description {

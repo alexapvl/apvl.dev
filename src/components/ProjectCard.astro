@@ -1,4 +1,9 @@
 ---
+import type { ProjectRepoMeta } from "../data/project-meta";
+import type { ProjectRole } from "../utils/project-status";
+import { getProjectStatusContext } from "../utils/project-status";
+import ProjectStatus from "./ProjectStatus.astro";
+
 interface Props {
   title: string;
   description: string;
@@ -6,29 +11,73 @@ interface Props {
   tech: string[];
   github?: string;
   slug: string;
+  role: ProjectRole;
+  lastTouched?: Date;
+  repoMeta?: ProjectRepoMeta;
 }
 
-const { title, description, pubDate, tech, github, slug } = Astro.props;
+const {
+  title,
+  description,
+  pubDate,
+  tech,
+  slug,
+  role,
+  lastTouched,
+  github,
+  repoMeta,
+} = Astro.props;
 const year = pubDate.getFullYear();
+const { activityLabel } = getProjectStatusContext({
+  lastTouched,
+  github,
+  repoMeta,
+});
 ---
 
-<a href={`/stuff/${slug}`} class="project-card">
-  <div class="card-summary">
+<article class="project-card">
+  <a href={`/stuff/${slug}`} class="card-link">
     <div class="card-header">
-      <h3 class="card-title">{title}</h3>
+      <div class="card-title-block">
+        <h3 class="card-title">
+          <span class="card-title-text">{title}</span>
+          <span class="card-title-sep" aria-hidden="true">·</span>
+          <span class="card-role">{role}</span>
+        </h3>
+      </div>
+      {
+        activityLabel && (
+          <span class="card-updated">{activityLabel}</span>
+        )
+      }
+    </div>
+  </a>
+
+  <a href={`/stuff/${slug}`} class="card-link card-link-body">
+    <p class="card-description">{description}</p>
+
+    <div class="card-footer">
+      <div class="card-tech">
+        {tech.map((t) => <span class="tech-pill">{t}</span>)}
+      </div>
       <span class="card-year">{year}</span>
     </div>
-    <p class="card-description">{description}</p>
-    <div class="card-tech">
-      {tech.map((t) => <span class="tech-pill">{t}</span>)}
-    </div>
-  </div>
+  </a>
+
+  <ProjectStatus
+    role={role}
+    lastTouched={lastTouched}
+    github={github}
+    repoMeta={repoMeta}
+    variant="card"
+    showMeta={false}
+    showActivity={false}
+  />
 
   <style>
     .project-card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
+      display: flex;
+      flex-direction: column;
       background-color: color-mix(
         in srgb,
         var(--color-bg-secondary) 50%,
@@ -47,37 +96,68 @@ const year = pubDate.getFullYear();
       box-shadow: var(--shadow-md);
     }
 
-    .project-card[open] {
-      border-color: var(--color-accent);
+    .card-link {
+      display: block;
+      padding: var(--space-lg) var(--space-lg) 0;
+      text-decoration: none;
+      color: inherit;
     }
 
-    .card-summary {
-      cursor: pointer;
-      padding: var(--space-lg);
-      list-style: none;
-      position: relative;
+    .card-link-body {
+      padding-top: var(--space-sm);
+      padding-bottom: var(--space-lg);
     }
 
-    .card-summary::-webkit-details-marker {
-      display: none;
+    .project-card:has(.project-status) .card-link-body {
+      padding-bottom: var(--space-md);
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: var(--space-sm);
+      align-items: flex-start;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xs);
+    }
+
+    .card-title-block {
+      min-width: 0;
     }
 
     .card-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35em;
       font-size: var(--font-size-lg);
+      line-height: var(--leading-tight);
+      min-width: 0;
+    }
+
+    .card-title-text {
       font-weight: 600;
       color: var(--color-text);
     }
 
-    .card-year {
-      font-size: var(--font-size-sm);
+    .card-title-sep {
+      font-weight: 400;
       color: var(--color-text-muted);
+      opacity: 0.55;
+    }
+
+    .card-role {
+      font-size: inherit;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+    }
+
+    .card-updated {
+      flex-shrink: 0;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      padding-top: 0.25em;
+      text-align: right;
+      white-space: nowrap;
     }
 
     .card-description {
@@ -87,10 +167,25 @@ const year = pubDate.getFullYear();
       margin-bottom: var(--space-md);
     }
 
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: var(--space-md);
+    }
+
     .card-tech {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-xs);
+      min-width: 0;
+    }
+
+    .card-year {
+      flex-shrink: 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      line-height: 1;
     }
 
     .tech-pill {
@@ -104,38 +199,5 @@ const year = pubDate.getFullYear();
       padding: 2px var(--space-sm);
       border-radius: var(--radius-full);
     }
-
-    .card-details {
-      padding: 0 var(--space-lg) var(--space-lg);
-      border-top: 1px solid var(--color-border);
-      margin-top: var(--space-md);
-      padding-top: var(--space-md);
-    }
-
-    .card-links {
-      display: flex;
-      gap: var(--space-md);
-      flex-wrap: wrap;
-    }
-
-    .card-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: var(--font-size-sm);
-      color: var(--color-accent);
-      text-decoration: none;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-sm);
-      transition: background-color var(--transition-fast);
-    }
-
-    .card-link:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-accent) 10%,
-        transparent
-      );
-    }
   </style>
-</a>
+</article>

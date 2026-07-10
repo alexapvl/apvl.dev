@@ -4,9 +4,10 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "tsx scripts/fetch-project-meta.ts && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "fetch-project-meta": "tsx scripts/fetch-project-meta.ts"
   },
   "dependencies": {
     "@alexapvl/drwr": "^0.1.0",
@@ -16,6 +17,7 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
-    "@types/three": "^0.182.0"
+    "@types/three": "^0.182.0",
+    "tsx": "^4.20.3"
   }
 }
