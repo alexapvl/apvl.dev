@@ -1,0 +1,35 @@
+---
+title: "mytime"
+description: "terminal task manager and Google Calendar CLI — local backlog, scheduled sync, agent-ready"
+pubDate: 2026-05-29
+role: owner
+github: "https://github.com/alexapvl/mytime"
+demo: "https://mytime.apvl.dev"
+tech: ["typescript", "node", "sqlite", "ink", "google calendar", "mcp"]
+---
+
+[mytime](https://mytime.apvl.dev) is a terminal app for tasks and calendar. Open work lives in a priority backlog until you schedule it; scheduled items sync to a dedicated Google Calendar. I built it because I wanted one loop for capture, scheduling, and day-of execution — in the TUI, in shell scripts, and in agent sessions — without handing calendar tokens to a hosted service.
+
+the workflow is deliberately simple: add tasks with quick-add NLP when you are not ready to commit to a time, schedule them when the day matters, then read the same state in daily, week, and month views alongside optional read-only external calendars.
+
+### Features
+
+- **Local-first backlog** — open tasks live in SQLite at `~/.mytime/` until you schedule or sync them
+- **Google Calendar sync** — scheduled work writes to a dedicated "mytime" calendar; other calendars can be pulled read-only for context
+- **Interactive TUI** — backlog, daily, week, month, and past-due views with keyboard and mouse support
+- **Quick-add NLP** — natural language input with priorities (`p0`–`p3`), projects (`@name`), and tags (`#context`)
+- **Schedule editor** — pick slots from free-time hints, nudge blocks by hour, or mark work all-day
+- **Agent CLI** — `mytime agent` exposes the same database with token-efficient TOON output and next-step hints
+- **MCP server** — stdio MCP remains available for clients that do not run shell commands
+- **Bring-your-own OAuth** — you create a Desktop OAuth client in your own Google Cloud project; credentials stay local
+- **Homebrew install** — slim macOS pack via `brew tap alexapvl/mytime`
+
+### Technical Details
+
+- the CLI is TypeScript on Node 20+, bundled with tsup and distributed as a global `mytime` command.
+- the TUI is built with Ink and React; calendar state is stored in `better-sqlite3` under `~/.mytime/db.sqlite`.
+- Google sync uses `@googleapis/calendar` with a narrow write scope — mytime only modifies its own calendar.
+- quick-add parsing runs through `chrono-node`; agent output uses `@toon-format/toon` for compact structured responses.
+- `mytime agent` follows the [AXI](https://axi.md) shape for shell-first agents; MCP tools mirror the same read/write surface for legacy clients.
+- external calendar events are ingested read-only for display; task titles from mytime are never rewritten during sync.
+- setup flows include `mytime setup`, `mytime doctor`, and agent onboarding prompts so browser-capable assistants can handle most of the Google Cloud Console clicking.

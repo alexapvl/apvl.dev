@@ -9,9 +9,13 @@
       "lastCommitMessage": "fix yt-dlp binary updates"
     },
     "personal-portfolio": {
-      "pushedAt": "2026-07-10T21:54:52Z",
-      "lastCommitMessage": "feat: add live project meta, filters, and build-time GitHub fetch on stuff"
+      "pushedAt": "2026-07-10T21:55:20Z",
+      "lastCommitMessage": "chore: refresh project meta after latest deploy"
+    },
+    "mytime": {
+      "pushedAt": "2026-07-12T14:47:29Z",
+      "lastCommitMessage": "fix: quick-add time ranges and all-day event duplicate days"
     }
   },
-  "fetchedAt": "2026-07-10T21:55:05.241Z"
+  "fetchedAt": "2026-07-12T19:25:12.488Z"
 }
