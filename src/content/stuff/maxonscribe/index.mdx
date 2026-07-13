@@ -1,0 +1,44 @@
+---
+title: "MaxonScribe"
+description: "Romanian medical dictation turned into structured, editable patient documents"
+pubDate: 2025-10-01
+role: maintainer
+lastTouched: 2026-03-13
+tech: ["react", "typescript", "convex", "whisper", "gemini", "tiptap", "pwa"]
+collaborators:
+  - name: "Cristian"
+    url: "https://cretu.dev"
+  - name: "Mihai"
+    url: "https://mihaicristian.dev"
+  - name: "Vasile"
+    url: "https://draguta.dev"
+  - name: "Alexandru"
+    url: "https://agportfolio-a13e2a8e20e4.herokuapp.com"
+---
+
+MaxonScribe is a medical dictation app that turns Romanian voice recordings into structured, editable patient documents.
+
+it started as a university project for a course called Innovative Product Design, then grew into client work. I built it alongside [Cristian](https://cretu.dev), [Mihai](https://mihaicristian.dev), [Vasile](https://draguta.dev), and [Alexandru](https://agportfolio-a13e2a8e20e4.herokuapp.com), and I am currently its only maintainer. I continue to maintain it pro bono, with the infrastructure designed to keep the app running without hosting costs.
+
+the goal is to take some of the repetitive typing out of clinical documentation. A doctor can record or upload a consultation, review the Romanian transcript, extract either a compact set of findings or a complete clinical note, edit the result, and export it as a DOCX document.
+
+### Features
+
+- **Romanian medical transcription** - records in the browser or accepts an existing audio file, then transcribes it with Whisper
+- **Two extraction modes** - produces compact key points for quick reuse or a complete structured clinical document
+- **Cardiology-aware output** - understands common Romanian abbreviations, normalizes measurements and units, and removes duplicate findings
+- **Patient history** - keeps recordings, transcripts, generated documents, and their processing status attached to each patient
+- **Editable documents** - generated notes remain fully editable and are saved automatically
+- **Flexible workflow** - recordings can be created before choosing a patient and assigned later
+- **DOCX export** - turns the reviewed result into a formatted document ready for the doctor's existing workflow
+- **Installable PWA** - works as an installable web app without adding a separate desktop client
+
+### Technical Details
+
+- the frontend is built with React, TypeScript, Vite, and TanStack Router.
+- Convex handles authentication, storage, realtime data, background actions, and doctor-scoped access to patients and documents.
+- Groq's Whisper large-v3 transcribes audio with Romanian selected explicitly.
+- Gemini 2.5 Flash uses schema-constrained generation to turn transcripts into predictable medical data instead of free-form AI text.
+- the extraction prompts are tuned for Romanian clinical language, with additional normalization for cardiology and echocardiography measurements.
+- TipTap powers the document editor and debounced autosave, while the DOCX pipeline generates the final export.
+- stopped recordings are preserved locally before upload, reducing the chance of losing a dictation after an accidental refresh or navigation.
