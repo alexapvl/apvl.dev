@@ -1,0 +1,149 @@
+---
+title: "building a nest for my agents"
+description: "how I stopped explaining myself in every new session"
+pubDate: 2026-07-14
+tags: ["ai", "agents", "workflow"]
+---
+
+every new agent session used to begin with the same tax:
+explaining how I like to work.
+
+use pnpm.
+keep the diff focused.
+match the existing style.
+reproduce bugs before fixing them.
+do not choose the cheapest implementation just because it would take a human longer.
+write like me, not like a corporate landing page.
+
+the agent could write code, but it did not know me.
+
+### the missing context
+
+I recently watched [Kun Chen's L8 Principal agentic engineering workflow](https://www.youtube.com/watch?v=iQyg-KypKAA).
+
+what stayed with me was not a specific model, terminal, or editor.
+it was how he treated new agent sessions like new people joining a team.
+
+even a capable engineer needs context before they can do useful work:
+how the project works, what the team values, which tools it uses, and which mistakes have already been made.
+
+agents need the same onboarding.
+
+this connected with the idea behind [`SOUL.md`](https://github.com/aaronjmars/soul.md):
+giving an agent a persistent understanding of identity, values, voice, and preferences.
+
+I wanted something broader than one personality file.
+I wanted a home for everything that makes an agent feel like mine.
+
+I called it Nest.
+
+### what Nest is
+
+Nest is a private, version-controlled repository containing the context I want available across my agent tools.
+
+it separates that context into a few layers:
+
+- global instructions for how I work
+- project-level instructions for how one codebase works
+- opinions that capture how I make ambiguous decisions
+- skills for workflows that are only needed sometimes
+- scripts that connect everything across different agent tools
+
+the same setup follows me between Codex, Claude Code, Cursor, and OpenCode.
+
+instead of maintaining separate copies, Nest uses symlinks to give each tool access to the same source of truth.
+
+the model can change.
+the harness can change.
+my way of working stays portable.
+
+### the prompt that started it
+
+I did not begin by manually designing every file.
+
+I gave my agent a prompt close to this:
+
+> I want to create a private, version-controlled home for my AI agent setup.
+>
+> It should work across Codex, Claude Code, Cursor, and OpenCode without duplicating configuration.
+>
+> Help me separate:
+>
+> - global instructions that should apply to every session
+> - project-specific context
+> - durable opinions about how I build software
+> - reusable skills for conditional workflows
+> - external skills that should remain machine-local
+>
+> Keep the context loaded into every session small. Use progressive disclosure for information that is only relevant to certain tasks.
+>
+> Before creating anything, inspect my current configuration and interview me about my coding preferences, writing style, tools, recurring corrections, and technical decision-making.
+>
+> Do not invent preferences. Derive them from my answers and the projects I already maintain.
+>
+> Then propose the repository structure, migration steps, and scripts required to connect it across my agent tools.
+
+that prompt created the structure.
+
+it did not create the soul.
+
+### teaching it my way
+
+the useful part happened gradually.
+
+whenever an agent did something I would not have done, I corrected it and explained why.
+
+then I asked it to remember the lesson in the correct place.
+
+a universal preference goes into the global instructions.
+knowledge about one repository stays inside that project.
+a durable belief goes into my opinions.
+a workflow that only matters sometimes becomes a skill.
+
+this distinction matters because loading everything into every session would waste context and tokens.
+
+the goal is not to tell the agent everything.
+the goal is to give it the right information when it needs it.
+
+### what changed
+
+before Nest, I spent a lot of time repeating instructions.
+
+now the agent already knows that I prefer focused changes over broad refactors.
+it knows how I evaluate tradeoffs.
+it knows which tools I use.
+it knows how I write.
+it knows what quality means to me.
+
+it feels less like opening a blank chatbot and more like continuing a conversation with a second brain.
+
+not a perfect copy of me.
+it still makes mistakes, and I still need to review its work.
+
+but it carries enough of my accumulated judgment that I can spend less time explaining how to work and more time deciding what is worth building.
+
+that is the biggest change.
+
+### the setup is never finished
+
+Nest is not a configuration I completed once.
+
+it grows whenever I notice friction.
+
+every repeated correction is a signal that some context is missing.
+every bloated instruction is a signal that something should become a skill.
+every new agent tool is a test of whether the setup is truly portable.
+
+the repository is private because it contains personal preferences, local paths, and details about how I work.
+
+but the pattern is simple:
+
+start with a small global memory.
+keep project knowledge close to the project.
+turn conditional workflows into skills.
+record the reasons behind your decisions, not only the rules.
+let the system evolve through real work.
+
+the best agent setup is not the one with the longest prompt.
+
+it is the one that slowly learns why you work the way you do.
