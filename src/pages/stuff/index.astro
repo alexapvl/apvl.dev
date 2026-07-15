@@ -132,9 +132,11 @@ const rolesInUse = PROJECT_ROLES.filter((role) =>
 
 <script>
   import { initStuffFilters } from "../../scripts/stuff-filters";
+  import { initRelativeTimes } from "../../scripts/relative-time";
 
   function setup() {
     initStuffFilters();
+    initRelativeTimes();
   }
 
   setup();

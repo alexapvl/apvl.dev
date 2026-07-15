@@ -28,7 +28,7 @@ const {
   repoMeta,
 } = Astro.props;
 const year = pubDate.getFullYear();
-const { activityLabel } = getProjectStatusContext({
+const { activityLabel, relativeAt } = getProjectStatusContext({
   lastTouched,
   github,
   repoMeta,
@@ -47,7 +47,17 @@ const { activityLabel } = getProjectStatusContext({
       </div>
       {
         activityLabel && (
-          <span class="card-updated">{activityLabel}</span>
+          relativeAt ? (
+            <span
+              class="card-updated"
+              data-relative-at={relativeAt}
+              data-relative-prefix="updated"
+            >
+              {activityLabel}
+            </span>
+          ) : (
+            <span class="card-updated">{activityLabel}</span>
+          )
         )
       }
     </div>

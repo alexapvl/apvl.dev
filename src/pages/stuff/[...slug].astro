@@ -153,6 +153,17 @@ const repoMeta = projectMeta[project.slug];
   </article>
 </BaseLayout>
 
+<script>
+  import { initRelativeTimes } from "../../scripts/relative-time";
+
+  function setup() {
+    initRelativeTimes();
+  }
+
+  setup();
+  document.addEventListener("astro:page-load", setup);
+</script>
+
 <style>
   .project-title-row {
     display: flex;

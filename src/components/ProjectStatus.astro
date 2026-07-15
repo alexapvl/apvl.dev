@@ -24,7 +24,7 @@ const {
   showMeta = true,
   showCommit = true,
 } = Astro.props;
-const { activityLabel, commitUrl } = getProjectStatusContext({
+const { activityLabel, relativeAt, commitUrl } = getProjectStatusContext({
   lastTouched,
   github,
   repoMeta,
@@ -47,7 +47,17 @@ const hasMeta =
           <span class="status-sep" aria-hidden="true">
             ·
           </span>
-          <span class="status-activity">{activityLabel}</span>
+          <span
+            class="status-activity"
+            {...(relativeAt
+              ? {
+                  "data-relative-at": relativeAt,
+                  "data-relative-prefix": "updated",
+                }
+              : {})}
+          >
+            {activityLabel}
+          </span>
         </p>
       ) : (
         <p class="status-meta">
@@ -59,7 +69,17 @@ const hasMeta =
   {
     !showMeta && activityLabel && showActivity && (
       <p class="status-meta">
-        <span class="status-activity">{activityLabel}</span>
+        <span
+          class="status-activity"
+          {...(relativeAt
+            ? {
+                "data-relative-at": relativeAt,
+                "data-relative-prefix": "updated",
+              }
+            : {})}
+        >
+          {activityLabel}
+        </span>
       </p>
     )
   }

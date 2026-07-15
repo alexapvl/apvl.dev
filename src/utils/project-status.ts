@@ -18,6 +18,7 @@ export interface ProjectRepoMetaInput {
 export interface ProjectStatusContext {
   activityLevel: ActivityLevel | null;
   activityLabel: string | null;
+  relativeAt: string | undefined;
   commitUrl: string | undefined;
 }
 
@@ -107,5 +108,10 @@ export function getProjectStatusContext({
       ? getCommitHistoryUrl(github)
       : undefined;
 
-  return { activityLevel, activityLabel, commitUrl };
+  return {
+    activityLevel,
+    activityLabel,
+    relativeAt: pushedAt?.toISOString(),
+    commitUrl,
+  };
 }

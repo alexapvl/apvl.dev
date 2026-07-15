@@ -4,12 +4,124 @@ on:
   schedule:
     - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: Deploy even if metadata is unchanged
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-rebuild
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 215b9837eb7de1356b5587b7ddf0119e
+  CLOUDFLARE_PAGES_PROJECT: apvl-dev
 
 jobs:
   rebuild:
     runs-on: ubuntu-latest
     steps:
+      - name: Record workflow start
+        run: echo "STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch project metadata
+        run: pnpm run fetch-project-meta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit updated metadata
+        id: commit
+        run: |
+          if git diff --quiet src/data/project-meta.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "metadata unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/data/project-meta.json
+            git commit -m "chore: refresh project metadata from GitHub"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "metadata committed and pushed"
+          fi
+
       - name: Trigger Cloudflare Pages rebuild
-        run: curl -sf -X POST "$CLOUDFLARE_DEPLOY_HOOK"
+        id: deploy
+        if: github.event_name == 'workflow_dispatch' && inputs.force_deploy == true && steps.commit.outputs.changed != 'true'
+        run: |
+          response=$(curl -sf -X POST "$CLOUDFLARE_DEPLOY_HOOK")
+          echo "$response"
+          deployment_id=$(echo "$response" | jq -r '.result.id // empty')
+          if [ -z "$deployment_id" ]; then
+            echo "deploy hook did not return a deployment id"
+            exit 1
+          fi
+          echo "deployment_id=$deployment_id" >> "$GITHUB_OUTPUT"
+          echo "triggered=true" >> "$GITHUB_OUTPUT"
         env:
           CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+
+      - name: Wait for Cloudflare deployment
+        if: steps.commit.outputs.changed == 'true' || steps.deploy.outputs.triggered == 'true'
+        run: |
+          tracked_id="${{ steps.deploy.outputs.deployment_id }}"
+          account_id="${{ env.CLOUDFLARE_ACCOUNT_ID }}"
+          project="${{ env.CLOUDFLARE_PAGES_PROJECT }}"
+          list_api="https://api.cloudflare.com/client/v4/accounts/${account_id}/pages/projects/${project}/deployments?env=production&per_page=5"
+
+          for attempt in $(seq 1 60); do
+            if [ -z "$tracked_id" ]; then
+              list_body=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$list_api")
+              tracked_id=$(echo "$list_body" | jq -r --arg started "$STARTED_AT" '
+                [.result[] | select(.created_on >= $started)] | first | .id // empty
+              ')
+              if [ -z "$tracked_id" ]; then
+                echo "attempt ${attempt}: waiting for new deployment after push"
+                sleep 10
+                continue
+              fi
+            fi
+
+            api="https://api.cloudflare.com/client/v4/accounts/${account_id}/pages/projects/${project}/deployments/${tracked_id}"
+            body=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api")
+
+            status=$(echo "$body" | jq -r '.result.latest_stage.status // empty')
+            stage=$(echo "$body" | jq -r '.result.latest_stage.name // empty')
+            trigger=$(echo "$body" | jq -r '.result.deployment_trigger.type // empty')
+            echo "attempt ${attempt}: id=${tracked_id} trigger=${trigger} stage=${stage} status=${status}"
+
+            if [ "$status" = "success" ] && [ "$stage" = "deploy" ]; then
+              echo "deployment succeeded"
+              exit 0
+            fi
+
+            if [ "$status" = "failure" ] || [ "$status" = "canceled" ]; then
+              echo "deployment failed"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "deployment timed out after 10 minutes"
+          exit 1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
