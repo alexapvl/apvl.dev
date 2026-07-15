@@ -81,6 +81,17 @@ Pass meaningful `title` and `description` to `BaseLayout`. `BaseHead` handles ca
 - Schema-validated frontmatter over ad hoc data
 - Run `pnpm build` before considering structural, routing, schema, or component changes done
 
+### Commit messages
+
+Use collection-scoped prefixes for content, not `feat:` or other generic conventional-commit types:
+
+- **New thought post** — `thought: <short description>`
+  - Example: `thought: add Nest agent setup post`
+- **New stuff project** — `stuff: <short description>`
+  - Example: `stuff: add mytime project card`
+
+Keep code, chore, and infra commits on their usual prefixes (`fix:`, `chore:`, etc.). Content commits should be their own commit — one post or project per commit when possible.
+
 ## What To Avoid
 
 - Generic portfolio tone on content or copy
