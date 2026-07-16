@@ -9,13 +9,13 @@
       "lastCommitMessage": "fix yt-dlp binary updates"
     },
     "personal-portfolio": {
-      "pushedAt": "2026-07-15T14:28:20Z",
-      "lastCommitMessage": "chore: refresh project metadata in CI and live relative times"
+      "pushedAt": "2026-07-15T14:28:44Z",
+      "lastCommitMessage": "chore: refresh project metadata from GitHub"
     },
     "mytime": {
-      "pushedAt": "2026-07-13T21:19:13Z",
-      "lastCommitMessage": "chore: update Homebrew formula for v0.1.6"
+      "pushedAt": "2026-07-15T16:30:24Z",
+      "lastCommitMessage": "Merge pull request #6 from alexapvl/docs/google-meet-site"
     }
   },
-  "fetchedAt": "2026-07-15T14:28:43.684Z"
+  "fetchedAt": "2026-07-16T08:10:22.770Z"
 }
