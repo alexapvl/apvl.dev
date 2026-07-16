@@ -1,4 +1,5 @@
-import meta from "./project-meta.json";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 export interface ProjectRepoMeta {
   pushedAt: string;
@@ -8,5 +9,14 @@ export interface ProjectRepoMeta {
 
 export type ProjectMetaMap = Record<string, ProjectRepoMeta>;
 
-export const projectMeta = meta.projects as ProjectMetaMap;
+interface ProjectMetaFile {
+  projects: ProjectMetaMap;
+  fetchedAt: string;
+}
+
+const meta = JSON.parse(
+  readFileSync(join(process.cwd(), "src/data/project-meta.json"), "utf-8")
+) as ProjectMetaFile;
+
+export const projectMeta = meta.projects;
 export const projectMetaFetchedAt = meta.fetchedAt;

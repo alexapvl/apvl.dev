@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import {
   existsSync,
   readFileSync,
@@ -28,16 +29,24 @@ interface StuffEntry {
   github?: string;
 }
 
-function loadExistingMeta(): MetaFile {
-  if (!existsSync(META_PATH)) {
-    return { projects: {}, fetchedAt: new Date(0).toISOString() };
-  }
+const IGNORED_COMMIT_AUTHORS = new Set(["github-actions[bot]"]);
+const IGNORED_COMMIT_MESSAGE_PATTERNS = [
+  /^chore:\s*refresh project metadata/i,
+];
 
-  try {
-    return JSON.parse(readFileSync(META_PATH, "utf-8")) as MetaFile;
-  } catch {
-    return { projects: {}, fetchedAt: new Date(0).toISOString() };
-  }
+function isIgnoredCommit(entry: {
+  author?: { login?: string | null } | null;
+  commit?: { message?: string };
+}): boolean {
+  const author = entry.author?.login;
+  if (author && IGNORED_COMMIT_AUTHORS.has(author)) return true;
+
+  const message = entry.commit?.message?.split("\n")[0]?.trim() ?? "";
+  if (!message) return true;
+
+  return IGNORED_COMMIT_MESSAGE_PATTERNS.some((pattern) =>
+    pattern.test(message)
+  );
 }
 
 function getStuffEntries(): StuffEntry[] {
@@ -71,6 +80,27 @@ function parseGithubUrl(url: string): { owner: string; repo: string } | null {
   };
 }
 
+function getGithubToken(): string {
+  const environmentToken =
+    process.env.GITHUB_TOKEN?.trim() || process.env.GH_TOKEN?.trim();
+  if (environmentToken) return environmentToken;
+
+  try {
+    const cliToken = execFileSync("gh", ["auth", "token"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+
+    if (cliToken) return cliToken;
+  } catch {
+    // The error below includes both supported authentication paths.
+  }
+
+  throw new Error(
+    "GitHub authentication required: set GITHUB_TOKEN or run `gh auth login`"
+  );
+}
+
 async function githubFetch(path: string, token?: string): Promise<Response> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
@@ -88,13 +118,12 @@ async function fetchRepoMeta(
   owner: string,
   repo: string,
   token?: string
-): Promise<ProjectRepoMeta | null> {
+): Promise<ProjectRepoMeta> {
   const repoRes = await githubFetch(`/repos/${owner}/${repo}`, token);
   if (!repoRes.ok) {
-    console.warn(
-      `fetch-project-meta: repo ${owner}/${repo} failed (${repoRes.status})`
+    throw new Error(
+      `repo ${owner}/${repo} request failed (${repoRes.status})`
     );
-    return null;
   }
 
   const repoData = (await repoRes.json()) as {
@@ -103,20 +132,35 @@ async function fetchRepoMeta(
   };
 
   let lastCommitMessage: string | undefined;
+  let pushedAt = repoData.pushed_at;
   const commitsRes = await githubFetch(
-    `/repos/${owner}/${repo}/commits?per_page=1`,
+    `/repos/${owner}/${repo}/commits?per_page=10`,
     token
   );
 
-  if (commitsRes.ok) {
-    const commits = (await commitsRes.json()) as Array<{
-      commit?: { message?: string };
-    }>;
-    lastCommitMessage = commits[0]?.commit?.message?.split("\n")[0]?.trim();
+  if (!commitsRes.ok) {
+    throw new Error(
+      `commits for ${owner}/${repo} request failed (${commitsRes.status})`
+    );
+  }
+
+  const commits = (await commitsRes.json()) as Array<{
+    author?: { login?: string | null } | null;
+    commit?: { message?: string; author?: { date?: string } };
+  }>;
+
+  const meaningful = commits.find((entry) => !isIgnoredCommit(entry));
+
+  if (meaningful?.commit) {
+    lastCommitMessage =
+      meaningful.commit.message?.split("\n")[0]?.trim() || undefined;
+    if (meaningful.commit.author?.date) {
+      pushedAt = meaningful.commit.author.date;
+    }
   }
 
   const meta: ProjectRepoMeta = {
-    pushedAt: repoData.pushed_at,
+    pushedAt,
     lastCommitMessage,
   };
 
@@ -128,49 +172,28 @@ async function fetchRepoMeta(
 }
 
 async function main() {
-  if (process.env.SKIP_PROJECT_META_FETCH === "1") {
-    console.log("fetch-project-meta: skipped (SKIP_PROJECT_META_FETCH=1)");
-    return;
-  }
-
-  const existing = loadExistingMeta();
-  const projects: Record<string, ProjectRepoMeta> = { ...existing.projects };
-  const token = process.env.GITHUB_TOKEN;
+  const projects: Record<string, ProjectRepoMeta> = {};
+  const token = getGithubToken();
   const entries = getStuffEntries().filter((entry) => entry.github);
 
   if (entries.length === 0) {
-    console.log("fetch-project-meta: no GitHub repos found in stuff collection");
-    return;
+    throw new Error("no GitHub repos found in stuff collection");
   }
-
-  let updated = 0;
 
   for (const entry of entries) {
     const parsed = parseGithubUrl(entry.github!);
     if (!parsed) {
-      console.warn(
-        `fetch-project-meta: could not parse GitHub URL for ${entry.slug}`
+      throw new Error(
+        `could not parse GitHub URL for ${entry.slug}: ${entry.github}`
       );
-      continue;
     }
 
-    try {
-      const meta = await fetchRepoMeta(parsed.owner, parsed.repo, token);
-      if (!meta) continue;
-
-      projects[entry.slug] = meta;
-      updated += 1;
-      console.log(`fetch-project-meta: updated ${entry.slug}`);
-    } catch (error) {
-      console.warn(`fetch-project-meta: ${entry.slug} failed`, error);
-    }
-  }
-
-  if (updated === 0) {
-    console.log(
-      "fetch-project-meta: no updates from GitHub, keeping existing metadata"
+    projects[entry.slug] = await fetchRepoMeta(
+      parsed.owner,
+      parsed.repo,
+      token
     );
-    return;
+    console.log(`fetch-project-meta: updated ${entry.slug}`);
   }
 
   const output: MetaFile = {
@@ -179,9 +202,12 @@ async function main() {
   };
 
   writeFileSync(META_PATH, `${JSON.stringify(output, null, 2)}\n`);
-  console.log(`fetch-project-meta: wrote ${updated} project(s) to project-meta.json`);
+  console.log(
+    `fetch-project-meta: wrote ${entries.length} project(s) to project-meta.json`
+  );
 }
 
 main().catch((error) => {
-  console.warn("fetch-project-meta: failed, keeping existing metadata", error);
+  console.error("fetch-project-meta: failed", error);
+  process.exitCode = 1;
 });
