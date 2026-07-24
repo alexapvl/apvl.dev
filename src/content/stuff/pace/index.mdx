@@ -1,0 +1,31 @@
+---
+title: "pace"
+description: "evidence-backed review surfaces for agent work - one structured run, rendered for web, email, and PDF"
+pubDate: 2026-07-22
+role: owner
+github: "https://github.com/alexapvl/pace-unlayer-build-with-elements"
+demo: "https://pace-unlayer.apvl.dev"
+tech: ["typescript", "react", "vite", "unlayer elements", "toon"]
+---
+
+[Pace](https://pace-unlayer.apvl.dev) turns a structured agent run into review-ready web, email, and PDF reports. I built it around one problem: agents produce work faster than humans can confidently review, while the evidence needed to verify that work stays scattered across commits, logs, tests, and screenshots.
+
+each report keeps the objective, changes, verification, risks, decisions, and receipts attached to the work. One canonical `AgentRun` powers every format, so the facts do not drift between the detailed review, stakeholder update, and portable audit record.
+
+### Features
+
+- **Three review surfaces** - render the same run as a responsive web report, inbox-style email, or downloadable PDF
+- **Evidence-backed review** - keep commits, checks, artifacts, risks, and human decisions beside the claimed result
+- **Clear review states** - distinguish work ready for review, work waiting on a decision, and work stopped safely
+- **Editable agent context** - inspect and apply changes to the underlying run as JSON or TOON
+- **Compact TOON input** - reduce the context size by 31% to 34% across the included runs while preserving lossless round trips
+- **Real dogfood evidence** - the featured run reviews the commit that built Pace v0 instead of relying on a fictional scenario
+
+### Technical Details
+
+- the interface is built with React 19, TypeScript, and Vite.
+- a shared Unlayer Elements template maps each `AgentRun` to format-specific `Page`, `Email`, and `Document` roots.
+- `renderToHtml`, `renderToPlainText`, and `renderToJson` produce live previews, text fallbacks, and reusable Unlayer design data.
+- JSON remains the canonical internal format; `@toon-format/toon` provides compact, editable agent context with strict round-trip validation.
+- deterministic scripts export the complete evidence pack, including HTML, plain text, TOON, design JSON, screenshots, and PDF.
+- Pace was built for Unlayer's [Build with Elements challenge](https://unlayer.com/elements).
