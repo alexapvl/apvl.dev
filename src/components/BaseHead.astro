@@ -5,16 +5,40 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>;
 }
 
 const {
   title = "Apavaloaiei Alexandru | apvl.dev",
   description = "Personal corner of the internet",
   image = "/og-image.jpg",
+  noindex = false,
+  jsonLd,
 } = Astro.props;
 const canonicalURL = Astro.site
   ? new URL(Astro.url.pathname, Astro.site)
   : Astro.url;
+
+const defaultJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "apvl.dev",
+  url: "https://apvl.dev",
+  author: {
+    "@type": "Person",
+    name: "Alexandru Apavaloaiei",
+    url: "https://apvl.dev",
+    sameAs: [
+      "https://github.com/alexapvl",
+      "https://x.com/alexapvl",
+      "https://linkedin.com/in/alexapvl",
+    ],
+  },
+  description: "Personal corner of the internet",
+};
+
+const structuredData = noindex ? null : (jsonLd ?? defaultJsonLd);
 ---
 
 <meta charset="UTF-8" />
@@ -29,11 +53,12 @@ const canonicalURL = Astro.site
 
 <title>{title}</title>
 <meta name="description" content={description} />
-{Astro.site && <link rel="canonical" href={canonicalURL} />}
+{noindex && <meta name="robots" content="noindex, follow" />}
+{Astro.site && !noindex && <link rel="canonical" href={canonicalURL} />}
 <meta name="generator" content={Astro.generator} />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={jsonLd?.["@type"] === "BlogPosting" ? "article" : "website"} />
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
@@ -54,27 +79,12 @@ const canonicalURL = Astro.site
 {image && <meta name="twitter:image" content={new URL(image, Astro.url)} />}
 {image && <meta name="twitter:image:alt" content="apvl.dev preview" />}
 
-<!-- JSON-LD Structured Data -->
-<script
-  type="application/ld+json"
-  set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "apvl.dev",
-    url: "https://apvl.dev",
-    author: {
-      "@type": "Person",
-      name: "Alexandru Apavaloaiei",
-      url: "https://apvl.dev",
-      sameAs: [
-        "https://github.com/alexapvl",
-        "https://x.com/alexapvl",
-        "https://linkedin.com/in/alexapvl",
-      ],
-    },
-    description: "Personal corner of the internet",
-  })}
-/>
+{structuredData && (
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
+)}
 
 <!-- Theme initialization (prevents FOUC) -->
 <script is:inline>

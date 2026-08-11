@@ -20,12 +20,43 @@ const formatDate = (date: Date) => {
     day: "numeric",
   });
 };
+
+const pageUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).href
+  : Astro.url.href;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  dateModified: (updatedDate ?? pubDate).toISOString(),
+  author: {
+    "@type": "Person",
+    name: "Alexandru Apavaloaiei",
+    url: "https://apvl.dev",
+    sameAs: [
+      "https://github.com/alexapvl",
+      "https://x.com/alexapvl",
+      "https://linkedin.com/in/alexapvl",
+    ],
+  },
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": pageUrl,
+  },
+  ...(cover && Astro.site
+    ? { image: new URL(cover, Astro.site).href }
+    : {}),
+};
 ---
 
 <BaseLayout
   title={`${title} | apvl.dev`}
   description={description}
   image={cover}
+  jsonLd={jsonLd}
 >
   <article class="page">
     <header class="page-header">
