@@ -1,7 +1,3 @@
----
-import SocialLinks from "./SocialLinks.astro";
----
-
 <section class="hero">
   <div class="hero-content">
     <div class="hero-header">
@@ -24,7 +20,33 @@ import SocialLinks from "./SocialLinks.astro";
       I enjoy building <a href="/stuff" class="hero-link">/stuff</a> and sharing my
       <a href="/thoughts" class="hero-link">/thoughts</a>.
     </p>
-    <SocialLinks class="hero-social" />
+    <p class="hero-now">
+      currently tinkering with software at
+      <a href="https://www.robite.ro" class="hero-link" target="_blank" rel="noopener noreferrer">robite</a>.
+      <br />
+      I also build my own projects and sometimes contribute to
+      <a href="https://en.wikipedia.org/wiki/Open-source_software" class="hero-link" target="_blank" rel="noopener noreferrer">OSS</a>.
+      in my free time I enjoy playing padel and hanging out at
+      <a href="https://clujhouse.com" class="hero-link" target="_blank" rel="noopener noreferrer">clujhouse</a>.
+    </p>
+    <p class="hero-now">
+      feel free to reach out on
+      <a href="https://x.com/alexapvl" class="hero-link" target="_blank" rel="noopener noreferrer">X</a>,
+      <a href="https://linkedin.com/in/alexapvl" class="hero-link" target="_blank" rel="noopener noreferrer">linkedin</a>
+      or
+      <button
+        type="button"
+        class="hero-link email-copy"
+        data-email="alex@apvl.dev"
+        aria-label="Copy email to clipboard"
+      >
+        <span class="email-text">email</span>
+        <span class="email-copied">copied</span>
+      </button>
+      <br />
+      and see what I've been building on
+      <a href="https://github.com/alexapvl" class="hero-link" target="_blank" rel="noopener noreferrer">github</a>.
+    </p>
   </div>
 </section>
 
@@ -104,8 +126,59 @@ import SocialLinks from "./SocialLinks.astro";
     margin-bottom: var(--space-xl);
   }
 
-  .hero-social {
-    justify-content: flex-start;
+  .hero-now {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-xl);
+  }
+
+  .hero-now:last-child {
+    margin-bottom: 0;
+  }
+
+  button.hero-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+  }
+
+  .email-copy {
+    position: relative;
+    display: inline-grid;
+    place-items: center start;
+  }
+
+  .email-text,
+  .email-copied {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .email-text {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .email-copied {
+    color: var(--color-accent);
+    opacity: 0;
+    transform: translateY(4px);
+    white-space: nowrap;
+  }
+
+  .email-copy.copied .email-text {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  .email-copy.copied .email-copied {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   @media (max-width: 640px) {
@@ -128,3 +201,28 @@ import SocialLinks from "./SocialLinks.astro";
     }
   }
 </style>
+
+<script>
+  function initEmailCopy() {
+    document.querySelectorAll(".email-copy").forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.copyBound) return;
+      button.dataset.copyBound = "true";
+
+      button.addEventListener("click", async () => {
+        const email = button.getAttribute("data-email");
+        if (!email) return;
+
+        try {
+          await navigator.clipboard.writeText(email);
+          button.classList.add("copied");
+          setTimeout(() => button.classList.remove("copied"), 1500);
+        } catch (err) {
+          console.error("Failed to copy email:", err);
+        }
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initEmailCopy);
+  initEmailCopy();
+</script>
