@@ -1,13 +1,11 @@
 ---
 import type { ProjectRepoMeta } from "../data/project-meta";
 import type { ProjectRole } from "../utils/project-status";
-import { getProjectStatusContext } from "../utils/project-status";
 import ProjectStatus from "./ProjectStatus.astro";
 
 interface Props {
   title: string;
   description: string;
-  pubDate: Date;
   tech: string[];
   github?: string;
   slug: string;
@@ -19,7 +17,6 @@ interface Props {
 const {
   title,
   description,
-  pubDate,
   tech,
   slug,
   role,
@@ -27,50 +24,21 @@ const {
   github,
   repoMeta,
 } = Astro.props;
-const year = pubDate.getFullYear();
-const { activityLabel, relativeAt } = getProjectStatusContext({
-  lastTouched,
-  github,
-  repoMeta,
-});
 ---
 
 <article class="project-card">
   <a href={`/stuff/${slug}`} class="card-link">
-    <div class="card-header">
-      <div class="card-title-block">
-        <h3 class="card-title">
-          <span class="card-title-text">{title}</span>
-          <span class="card-title-sep" aria-hidden="true">·</span>
-          <span class="card-role">{role}</span>
-        </h3>
-      </div>
-      {
-        activityLabel && (
-          relativeAt ? (
-            <span
-              class="card-updated"
-              data-relative-at={relativeAt}
-              data-relative-prefix="updated"
-            >
-              {activityLabel}
-            </span>
-          ) : (
-            <span class="card-updated">{activityLabel}</span>
-          )
-        )
-      }
-    </div>
+    <h3 class="card-title">
+      <span class="card-title-text">{title}</span>
+      <span class="card-role">{role}</span>
+    </h3>
   </a>
 
   <a href={`/stuff/${slug}`} class="card-link card-link-body">
     <p class="card-description">{description}</p>
 
-    <div class="card-footer">
-      <div class="card-tech">
-        {tech.map((t) => <span class="tech-pill">{t}</span>)}
-      </div>
-      <span class="card-year">{year}</span>
+    <div class="card-tech">
+      {tech.map((t) => <span class="tech-pill">{t}</span>)}
     </div>
   </a>
 
@@ -81,7 +49,6 @@ const { activityLabel, relativeAt } = getProjectStatusContext({
     repoMeta={repoMeta}
     variant="card"
     showMeta={false}
-    showActivity={false}
   />
 
   <style>
@@ -122,51 +89,30 @@ const { activityLabel, relativeAt } = getProjectStatusContext({
       padding-bottom: var(--space-md);
     }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-md);
-      margin-bottom: var(--space-xs);
-    }
-
-    .card-title-block {
-      min-width: 0;
-    }
-
     .card-title {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 0.35em;
+      justify-content: space-between;
+      gap: var(--space-md);
+      width: 100%;
       font-size: var(--font-size-lg);
       line-height: var(--leading-tight);
       min-width: 0;
+      margin-bottom: var(--space-xs);
     }
 
     .card-title-text {
+      min-width: 0;
       font-weight: 600;
       color: var(--color-text);
     }
 
-    .card-title-sep {
-      font-weight: 400;
-      color: var(--color-text-muted);
-      opacity: 0.55;
-    }
-
     .card-role {
+      flex-shrink: 0;
+      margin-left: auto;
       font-size: inherit;
       font-weight: 400;
       color: var(--color-text-secondary);
-    }
-
-    .card-updated {
-      flex-shrink: 0;
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      padding-top: 0.25em;
-      text-align: right;
       white-space: nowrap;
     }
 
@@ -177,25 +123,11 @@ const { activityLabel, relativeAt } = getProjectStatusContext({
       margin-bottom: var(--space-md);
     }
 
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: var(--space-md);
-    }
-
     .card-tech {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-xs);
       min-width: 0;
-    }
-
-    .card-year {
-      flex-shrink: 0;
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      line-height: 1;
     }
 
     .tech-pill {

@@ -39,25 +39,7 @@ const rolesInUse = PROJECT_ROLES.filter((role) =>
 
       {
         projects.length > 0 && (
-          <nav class="stuff-toolbar" aria-label="sort and filter projects">
-            <button
-              type="button"
-              class="toolbar-btn"
-              data-stuff-sort="updated"
-              aria-pressed="true"
-            >
-              updated
-            </button>
-            <span class="toolbar-sep" aria-hidden="true">·</span>
-            <button
-              type="button"
-              class="toolbar-btn"
-              data-stuff-sort="shipped"
-              aria-pressed="false"
-            >
-              shipped
-            </button>
-            <span class="toolbar-sep toolbar-sep--break" aria-hidden="true">|</span>
+          <nav class="stuff-toolbar" aria-label="filter projects">
             <button
               type="button"
               class="toolbar-btn"
@@ -98,17 +80,10 @@ const rolesInUse = PROJECT_ROLES.filter((role) =>
                   class="stuff-item"
                   data-stuff-item
                   data-role={project.data.role}
-                  data-pub-date={project.data.pubDate.valueOf()}
-                  data-active-date={getActivityTimestamp(
-                    project.data.pubDate,
-                    project.data.lastTouched,
-                    projectMeta[project.slug]
-                  )}
                 >
                   <ProjectCard
                     title={project.data.title}
                     description={project.data.description}
-                    pubDate={project.data.pubDate}
                     tech={project.data.tech}
                     github={project.data.github}
                     slug={project.slug}
@@ -167,12 +142,6 @@ const rolesInUse = PROJECT_ROLES.filter((role) =>
     font-size: 1.2em;
     opacity: 0.4;
     user-select: none;
-  }
-
-  .toolbar-sep--break {
-    font-size: 1em;
-    opacity: 0.35;
-    margin: 0 0.1em;
   }
 
   .toolbar-btn {

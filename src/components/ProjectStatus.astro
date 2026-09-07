@@ -31,91 +31,130 @@ const { activityLabel, relativeAt, commitUrl } = getProjectStatusContext({
 });
 
 const hasCommit = showCommit && Boolean(repoMeta?.lastCommitMessage && commitUrl);
+const hasActivity = Boolean(activityLabel && showActivity);
+const activityAttrs = relativeAt
+  ? {
+      "data-relative-at": relativeAt,
+      "data-relative-prefix": "updated",
+    }
+  : {};
 const hasMeta =
   showMeta ||
-  (!showMeta && activityLabel && showActivity);
+  (!showMeta && hasActivity);
 ---
 
 {
   (hasMeta || hasCommit) && (
     <div class="project-status" data-variant={variant}>
-  {
-    showMeta &&
-      ((activityLabel && showActivity) ? (
-        <p class="status-meta">
-          <span class="status-role">{role}</span>
-          <span class="status-sep" aria-hidden="true">
-            ·
-          </span>
-          <span
-            class="status-activity"
-            {...(relativeAt
-              ? {
-                  "data-relative-at": relativeAt,
-                  "data-relative-prefix": "updated",
-                }
-              : {})}
-          >
-            {activityLabel}
-          </span>
-        </p>
-      ) : (
-        <p class="status-meta">
-          <span class="status-role">{role}</span>
-        </p>
-      ))
-  }
+      {
+        variant === "card" ? (
+          <div class="status-row">
+            {
+              hasCommit && (
+                <a
+                  href={commitUrl}
+                  class="status-commit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`view commit history on GitHub — latest: ${repoMeta.lastCommitMessage}`}
+                >
+                  <svg
+                    class="status-commit-icon"
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="8" cy="8" r="2.25" fill="currentColor" stroke="none" />
+                    <path d="M8 2.5v2.25M8 11.25V13.5" />
+                  </svg>
+                  <span
+                    class="status-commit-message"
+                    title={repoMeta.lastCommitMessage}
+                  >
+                    {repoMeta.lastCommitMessage}
+                  </span>
+                </a>
+              )
+            }
+            {
+              hasActivity && (
+                <span class="status-activity" {...activityAttrs}>
+                  {activityLabel}
+                </span>
+              )
+            }
+          </div>
+        ) : (
+          <>
+            {
+              showMeta &&
+                (hasActivity ? (
+                  <p class="status-meta">
+                    <span class="status-role">{role}</span>
+                    <span class="status-sep" aria-hidden="true">
+                      ·
+                    </span>
+                    <span class="status-activity" {...activityAttrs}>
+                      {activityLabel}
+                    </span>
+                  </p>
+                ) : (
+                  <p class="status-meta">
+                    <span class="status-role">{role}</span>
+                  </p>
+                ))
+            }
 
-  {
-    !showMeta && activityLabel && showActivity && (
-      <p class="status-meta">
-        <span
-          class="status-activity"
-          {...(relativeAt
-            ? {
-                "data-relative-at": relativeAt,
-                "data-relative-prefix": "updated",
-              }
-            : {})}
-        >
-          {activityLabel}
-        </span>
-      </p>
-    )
-  }
+            {
+              !showMeta && hasActivity && (
+                <p class="status-meta">
+                  <span class="status-activity" {...activityAttrs}>
+                    {activityLabel}
+                  </span>
+                </p>
+              )
+            }
 
-  {
-    hasCommit && (
-      <a
-        href={commitUrl}
-        class="status-commit"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`view commit history on GitHub — latest: ${repoMeta.lastCommitMessage}`}
-      >
-        <svg
-          class="status-commit-icon"
-          viewBox="0 0 16 16"
-          width="14"
-          height="14"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="8" cy="8" r="2.25" fill="currentColor" stroke="none" />
-          <path d="M8 2.5v2.25M8 11.25V13.5" />
-        </svg>
-        <span
-          class="status-commit-message"
-          title={repoMeta.lastCommitMessage}
-        >
-          {repoMeta.lastCommitMessage}
-        </span>
-      </a>
-      )
-    }
+            {
+              hasCommit && (
+                <a
+                  href={commitUrl}
+                  class="status-commit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`view commit history on GitHub — latest: ${repoMeta.lastCommitMessage}`}
+                >
+                  <svg
+                    class="status-commit-icon"
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="8" cy="8" r="2.25" fill="currentColor" stroke="none" />
+                    <path d="M8 2.5v2.25M8 11.25V13.5" />
+                  </svg>
+                  <span
+                    class="status-commit-message"
+                    title={repoMeta.lastCommitMessage}
+                  >
+                    {repoMeta.lastCommitMessage}
+                  </span>
+                </a>
+              )
+            }
+          </>
+        )
+      }
     </div>
   )
 }
@@ -129,14 +168,29 @@ const hasMeta =
     margin: 0 var(--space-lg) var(--space-md);
   }
 
-  .project-status[data-variant="card"] .status-meta {
-    margin-bottom: var(--space-xs);
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-width: 0;
   }
 
   .project-status[data-variant="card"] .status-commit {
+    flex: 1;
+    min-width: 0;
     margin-bottom: 0;
     margin-left: 0;
     padding-left: 0;
+  }
+
+  .project-status[data-variant="card"] .status-activity {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+    white-space: nowrap;
   }
 
   .project-status[data-variant="page"] .status-meta {

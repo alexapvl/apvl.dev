@@ -1,6 +1,5 @@
 import type { ProjectRole } from "../utils/project-status";
 
-type SortMode = "updated" | "shipped";
 type RoleFilter = "all" | ProjectRole;
 
 function isStuffPage(pathname = window.location.pathname): boolean {
@@ -19,14 +18,6 @@ function getAvailableRoles(root: HTMLElement): ProjectRole[] {
     .filter(Boolean) as ProjectRole[];
 }
 
-function getSortFromUrl(): SortMode {
-  const value = new URLSearchParams(window.location.search).get("sort");
-  if (value === "shipped" || value === "added" || value === "newest") {
-    return "shipped";
-  }
-  return "updated";
-}
-
 function getRoleFromUrl(availableRoles: ProjectRole[]): RoleFilter {
   const value = new URLSearchParams(window.location.search).get("role");
   if (!value || value === "all") return "all";
@@ -36,9 +27,8 @@ function getRoleFromUrl(availableRoles: ProjectRole[]): RoleFilter {
   return "all";
 }
 
-function updateUrl(sort: SortMode, role: RoleFilter) {
+function updateUrl(role: RoleFilter) {
   const params = new URLSearchParams();
-  if (sort !== "updated") params.set("sort", sort);
   if (role !== "all") params.set("role", role);
 
   const query = params.toString();
@@ -57,20 +47,8 @@ function applyFilters(root: HTMLElement) {
   if (!grid) return;
 
   const availableRoles = getAvailableRoles(root);
-  const sort = getSortFromUrl();
   const role = getRoleFromUrl(availableRoles);
   const items = [...grid.querySelectorAll<HTMLElement>("[data-stuff-item]")];
-
-  items.sort((a, b) => {
-    if (sort === "updated") {
-      return Number(b.dataset.activeDate) - Number(a.dataset.activeDate);
-    }
-    return Number(b.dataset.pubDate) - Number(a.dataset.pubDate);
-  });
-
-  for (const item of items) {
-    grid.appendChild(item);
-  }
 
   let visibleCount = 0;
 
@@ -84,17 +62,13 @@ function applyFilters(root: HTMLElement) {
     emptyState.hidden = visibleCount > 0;
   }
 
-  root.querySelectorAll<HTMLButtonElement>("[data-stuff-sort]").forEach((btn) => {
-    const isActive = btn.dataset.stuffSort === sort;
-    btn.classList.toggle("is-active", isActive);
-    btn.setAttribute("aria-pressed", String(isActive));
-  });
-
   root.querySelectorAll<HTMLButtonElement>("[data-stuff-role]").forEach((btn) => {
     const isActive = btn.dataset.stuffRole === role;
     btn.classList.toggle("is-active", isActive);
     btn.setAttribute("aria-pressed", String(isActive));
   });
+
+  updateUrl(role);
 }
 
 function setupPopstateListener() {
@@ -120,22 +94,11 @@ export function initStuffFilters() {
     const target = event.target;
     if (!(target instanceof HTMLButtonElement)) return;
 
-    const availableRoles = getAvailableRoles(root);
-    const sort = getSortFromUrl();
-    const role = getRoleFromUrl(availableRoles);
-
-    const nextSort = target.dataset.stuffSort as SortMode | undefined;
-    if (nextSort) {
-      updateUrl(nextSort, role);
-      applyFilters(root);
-      return;
-    }
-
     const nextRole = target.dataset.stuffRole as RoleFilter | undefined;
-    if (nextRole) {
-      updateUrl(sort, nextRole);
-      applyFilters(root);
-    }
+    if (!nextRole) return;
+
+    updateUrl(nextRole);
+    applyFilters(root);
   });
 
   applyFilters(root);
