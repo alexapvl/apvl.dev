@@ -13,6 +13,7 @@ export interface ProjectRepoMetaInput {
   pushedAt: string;
   archived?: boolean;
   lastCommitMessage?: string;
+  commitsAuthor?: string;
 }
 
 export interface ProjectStatusContext {
@@ -61,8 +62,10 @@ export function formatShortMonth(date: Date): string {
     .toLowerCase();
 }
 
-export function getCommitHistoryUrl(github: string): string {
-  return `${github.replace(/\/$/, "")}/commits`;
+export function getCommitHistoryUrl(github: string, author?: string): string {
+  const base = `${github.replace(/\/$/, "")}/commits`;
+  if (!author) return base;
+  return `${base}?author=${encodeURIComponent(author)}`;
 }
 
 export function formatActivityLabel(
@@ -105,7 +108,7 @@ export function getProjectStatusContext({
     : null;
   const commitUrl =
     github && repoMeta?.lastCommitMessage
-      ? getCommitHistoryUrl(github)
+      ? getCommitHistoryUrl(github, repoMeta.commitsAuthor)
       : undefined;
 
   return {

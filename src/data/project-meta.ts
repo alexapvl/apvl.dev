@@ -5,6 +5,7 @@ export interface ProjectRepoMeta {
   pushedAt: string;
   archived?: boolean;
   lastCommitMessage?: string;
+  commitsAuthor?: string;
 }
 
 export type ProjectMetaMap = Record<string, ProjectRepoMeta>;

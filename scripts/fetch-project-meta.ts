@@ -17,6 +17,7 @@ interface ProjectRepoMeta {
   pushedAt: string;
   archived?: boolean;
   lastCommitMessage?: string;
+  commitsAuthor?: string;
 }
 
 interface MetaFile {
@@ -27,12 +28,19 @@ interface MetaFile {
 interface StuffEntry {
   slug: string;
   github?: string;
+  role?: string;
+  lastTouched?: string;
 }
 
+const SITE_GITHUB_LOGIN = "alexapvl";
 const IGNORED_COMMIT_AUTHORS = new Set(["github-actions[bot]"]);
 const IGNORED_COMMIT_MESSAGE_PATTERNS = [
   /^chore:\s*refresh project metadata/i,
 ];
+
+function shouldScopeCommitsToMe(role?: string): boolean {
+  return Boolean(role && role !== "owner");
+}
 
 function isIgnoredCommit(entry: {
   author?: { login?: string | null } | null;
@@ -63,8 +71,12 @@ function getStuffEntries(): StuffEntry[] {
     const slug =
       frontmatter.match(/^slug:\s*["']?([^"'\n]+)["']?/m)?.[1] ?? dir.name;
     const github = frontmatter.match(/^github:\s*["']?([^"'\n]+)["']?/m)?.[1];
+    const role = frontmatter.match(/^role:\s*["']?([^"'\n]+)["']?/m)?.[1];
+    const lastTouched = frontmatter.match(
+      /^lastTouched:\s*["']?([^"'\n]+)["']?/m
+    )?.[1];
 
-    entries.push({ slug, github });
+    entries.push({ slug, github, role, lastTouched });
   }
 
   return entries;
@@ -117,7 +129,9 @@ async function githubFetch(path: string, token?: string): Promise<Response> {
 async function fetchRepoMeta(
   owner: string,
   repo: string,
-  token?: string
+  token?: string,
+  commitsAuthor?: string,
+  lastTouched?: string
 ): Promise<ProjectRepoMeta> {
   const repoRes = await githubFetch(`/repos/${owner}/${repo}`, token);
   if (!repoRes.ok) {
@@ -133,8 +147,11 @@ async function fetchRepoMeta(
 
   let lastCommitMessage: string | undefined;
   let pushedAt = repoData.pushed_at;
+  const params = new URLSearchParams({ per_page: "10" });
+  if (commitsAuthor) params.set("author", commitsAuthor);
+
   const commitsRes = await githubFetch(
-    `/repos/${owner}/${repo}/commits?per_page=10`,
+    `/repos/${owner}/${repo}/commits?${params}`,
     token
   );
 
@@ -157,12 +174,21 @@ async function fetchRepoMeta(
     if (meaningful.commit.author?.date) {
       pushedAt = meaningful.commit.author.date;
     }
+  } else if (commitsAuthor) {
+    lastCommitMessage = undefined;
+    if (lastTouched) {
+      pushedAt = new Date(lastTouched).toISOString();
+    }
   }
 
   const meta: ProjectRepoMeta = {
     pushedAt,
     lastCommitMessage,
   };
+
+  if (commitsAuthor && lastCommitMessage) {
+    meta.commitsAuthor = commitsAuthor;
+  }
 
   if (repoData.archived) {
     meta.archived = true;
@@ -188,10 +214,16 @@ async function main() {
       );
     }
 
+    const commitsAuthor = shouldScopeCommitsToMe(entry.role)
+      ? SITE_GITHUB_LOGIN
+      : undefined;
+
     projects[entry.slug] = await fetchRepoMeta(
       parsed.owner,
       parsed.repo,
-      token
+      token,
+      commitsAuthor,
+      entry.lastTouched
     );
     console.log(`fetch-project-meta: updated ${entry.slug}`);
   }
