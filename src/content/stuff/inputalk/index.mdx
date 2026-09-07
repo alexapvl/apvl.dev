@@ -1,0 +1,26 @@
+---
+title: "inputalk"
+description: "on-device Whisper dictation for macOS - hold a shortcut, speak, paste where the cursor is"
+pubDate: 2026-06-19
+role: contributor
+lastTouched: 2026-08-30
+github: "https://github.com/sebi75/inputalk"
+demo: "https://inputalk.com"
+tech: ["macos", "swift", "swiftui", "whisper", "sparkle"]
+collaborators:
+  - name: "Sebastian"
+    url: "https://sebastiansemeniuc.com"
+---
+
+[inputalk](https://inputalk.com) is free, open-source dictation for macOS. hold a shortcut, speak, release, and the text lands wherever the cursor is. transcription runs on-device with Whisper. no cloud, no API keys. [Sebastian](https://sebastiansemeniuc.com) started it.
+
+I came in as a contributor, first to ship Sparkle updates, then to make the dictation loop feel more like a native Mac utility: the shortcut, the microphone, the indicator next to the caret, and a local history when paste has nowhere to go.
+
+### Contributions
+
+- **Sparkle auto-updates** - updater, Check for Updates, a settings toggle, and an appcast next to the existing release manifest.
+- **Dictation shortcuts** - configurable modifier chords with left/right keys, tap, double-tap, and hold, without breaking existing-user defaults.
+- **Cursor-side recording indicator** - six-band FFT waveform next to the caret, synced to the display refresh rate.
+- **Microphone picker** - Settings and menu bar stay in sync, persist the choice, warn on disconnect, and bind capture to the selected device so recording from the Mac mic does not interrupt AirPods playback.
+- **Transcript history** - local history in Settings and the menu bar (copy / optional paste), later moved to SQLite with talking-rate stats and a confirm step before delete.
+- **Cleaner transcripts** - skip warning-only Whisper tags like `[INAUDIBLE]` and `[BLANK_AUDIO]` so they are not typed or stored.
