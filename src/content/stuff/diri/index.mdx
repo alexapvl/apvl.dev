@@ -1,0 +1,27 @@
+---
+title: "diri"
+description: "native workspace for coding agents - run them in parallel, review in place"
+pubDate: 2026-08-12
+role: contributor
+lastTouched: 2026-09-01
+github: "https://github.com/cristicretu/diri"
+demo: "https://diri.sh"
+tech: ["rust", "gpui", "macos", "mcp"]
+collaborators:
+  - name: "Cristian"
+    url: "https://cretu.dev"
+---
+
+[diri](https://diri.sh) is a native workspace for coding agents. You run Claude Code, Codex, Cursor, Gemini, and other terminal agents side by side, each in its own git worktree, and review the diff in place. [Cristian](https://cretu.dev) built it in Rust and GPUI.
+
+I use it every day, and I am responsible for the Cursor integration.
+
+the rest came from the same daily use: the menu bar did not match the rest of the app, and a few windowing bugs showed up once I started leaving Diri open across monitors.
+
+### Contributions
+
+- **Cursor integration** - wired Cursor into Dirijor through a session-local plugin dir (MCP tools and hooks), since Cursor has no `--mcp-config`. later I stopped new chats from getting stuck as `Cursor Agent - Ready`, and made a turn go idle when it actually ends.
+- **Menu bar inbox** - rebuilt the menu-bar panel as a compact sidebar: projects, sessions, New Agent, settings. opening it does not steal focus from whatever you are in.
+- **Visible-but-unfocused terminals** - a Diri window left on another monitor used to freeze because repaints were gated on OS focus, not visibility.
+- **Shared color environment** - one `TERM` / `COLORTERM` assertion for agents, local shells, and remote shells so they do not drift.
+- **Untinted menu extra** - AppKit was tinting the status item against the app appearance, which painted the mark black on a dark menu bar during notifications.
