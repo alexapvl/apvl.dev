@@ -1,0 +1,40 @@
+---
+title: "Walletify"
+description: "iPhone app for making custom Apple Wallet passes from a barcode"
+pubDate: 2026-09-11
+role: owner
+lastTouched: 2026-09-11
+demo: "https://walletify.apvl.dev"
+tech: ["ios", "swift", "swiftui", "swiftdata", "passkit", "node"]
+---
+
+[Walletify](https://walletify.apvl.dev) is an iPhone app for making Apple Wallet passes. Scan a barcode, style the card, add it to Wallet.
+
+this was the first iOS app I ever started. I had poked at SwiftUI before, but I had never taken something end to end: the phone app, a server that signs a real `.pkpass`, TestFlight, the App Store.
+
+I began in early 2025 because I was tired of loyalty cards. The physical ones stuffed the wallet. The digital ones lived in merchant apps I had to sign into at the worst possible moment. I wanted the barcode in Apple Wallet, on my terms, without someone else's app in the middle.
+
+I took my time with it. A lot of the work was not the editor. It was learning how passes actually get signed, how Add to Wallet should feel, and how to ship something I would trust on my own lock screen. When a build felt usable I sent it to friends on TestFlight. I did not expect much. It is not an app everyone would use. They all came back positive anyway, which still surprised me.
+
+I use it myself. The passes sit in Wallet and they are easy to pull up when I need them, especially at supermarkets or gas stations.
+
+### Features
+
+- **Scan, photo, or file** - point the camera at a barcode or QR, or pull one from Photos or a file
+- **Three pass types** - store cards, boarding passes, and Wi-Fi passes
+- **On-device editor** - colors, gradient, fields, logo text, barcode payload, grouping name
+- **Add to Wallet** - the app asks a server to sign a `.pkpass`, then Apple's add-pass sheet takes over
+- **Share from Wallet** - every pass is a normal Apple Wallet pass, so you can create one and share it with someone else
+- **Edit later** - designs stay on the phone; generate again to replace the Wallet pass
+- **Three free passes per device** - then monthly, yearly, or lifetime for unlimited; no account
+- **On the App Store** - [Walletify](https://apps.apple.com/app/id6747836652), iPhone, iOS 18.6+
+
+### Technical Details
+
+- the app is SwiftUI and SwiftData on iOS 18.6+, iPhone-only, portrait-locked.
+- cards are local `@Model` records. Each type maps into PassKit params through a shared `CardProtocol`.
+- adding to Wallet posts those params to a Node 22 API on Google Cloud Functions, which signs the pass with `passkit-generator` and returns a `.pkpass`.
+- the client talks to the API with StoreKit 2 entitlements, DeviceCheck / App Attest, and a device-scoped pass count. Free tier is 3 passes; subscribed devices are unlimited.
+- Firestore tracks pass counts and subscription state. App Store Server Notifications keep that in sync when billing changes off-device.
+- deep links use `walletify://card/<serial>` so a pass can open back into the matching card.
+- the marketing site is a static Astro app at [walletify.apvl.dev](https://walletify.apvl.dev).
