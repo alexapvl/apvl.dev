@@ -18,20 +18,34 @@ export function initKeybinds() {
     return document.getElementById("nav-panel");
   }
 
-  function expandNavPanel() {
+  function setNavPanelExpanded(expanded: boolean) {
+    appWindow.__navPanelExpanded = expanded;
     const panel = getNavPanel();
-    if (panel) {
-      appWindow.__navPanelExpanded = true;
-      panel.classList.add("expanded");
-    }
+    if (!panel) return;
+
+    panel.classList.toggle("expanded", expanded);
+
+    panel
+      .querySelector<HTMLButtonElement>('[data-nav-action="toggle"]')
+      ?.setAttribute("aria-expanded", expanded ? "true" : "false");
+
+    const keybinds = panel.querySelector<HTMLElement>("#nav-keybinds");
+    if (keybinds) keybinds.inert = !expanded;
+
+    panel
+      .querySelector(".label-collapsed")
+      ?.toggleAttribute("aria-hidden", expanded);
+    panel
+      .querySelector(".label-expanded")
+      ?.toggleAttribute("aria-hidden", !expanded);
+  }
+
+  function expandNavPanel() {
+    setNavPanelExpanded(true);
   }
 
   function collapseNavPanel() {
-    const panel = getNavPanel();
-    if (panel) {
-      appWindow.__navPanelExpanded = false;
-      panel.classList.remove("expanded");
-    }
+    setNavPanelExpanded(false);
   }
 
   function toggleNavPanel() {
@@ -47,10 +61,28 @@ export function initKeybinds() {
     if (!panel) return;
 
     panel.classList.add("state-sync");
-    panel.classList.toggle("expanded", !!appWindow.__navPanelExpanded);
+    setNavPanelExpanded(!!appWindow.__navPanelExpanded);
     requestAnimationFrame(() => {
       panel.classList.remove("state-sync");
     });
+  }
+
+  function toggleTheme() {
+    if (typeof (window as any).toggleTheme === "function") {
+      (window as any).toggleTheme();
+    }
+  }
+
+  function toggleMusic() {
+    if ((window as any).musicPlayer) {
+      (window as any).musicPlayer.toggle();
+    }
+  }
+
+  function go(path: string) {
+    if (window.location.pathname !== path) {
+      navigate(path);
+    }
   }
 
   // Expose for external use
@@ -76,48 +108,53 @@ export function initKeybinds() {
 
     switch (e.key.toLowerCase()) {
       case "0":
-        // Toggle theme
-        if (typeof (window as any).toggleTheme === "function") {
-          (window as any).toggleTheme();
-        }
+        toggleTheme();
         break;
 
       case "m":
-        // Toggle music
-        if ((window as any).musicPlayer) {
-          (window as any).musicPlayer.toggle();
-        }
+        toggleMusic();
         break;
 
       case "n":
-        // Toggle navigation panel
         toggleNavPanel();
         break;
 
       case "t":
-        // Navigate to blog (using View Transitions)
-        if (window.location.pathname !== "/thoughts") {
-          navigate("/thoughts");
-        }
+        go("/thoughts");
         break;
 
       case "s":
-        // Navigate to stuff (using View Transitions)
-        if (window.location.pathname !== "/stuff") {
-          navigate("/stuff");
-        }
+        go("/stuff");
         break;
 
       case "h":
-        // Go to home page (using View Transitions)
-        if (window.location.pathname !== "/") {
-          navigate("/");
-        }
+        go("/");
         break;
 
       case "backspace":
-        // Go back - history.back() works with View Transitions
         e.preventDefault();
+        history.back();
+        break;
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = (event.target as Element | null)?.closest<HTMLElement>(
+      "[data-nav-action]",
+    );
+    if (!trigger) return;
+
+    switch (trigger.dataset.navAction) {
+      case "toggle":
+        toggleNavPanel();
+        break;
+      case "theme":
+        toggleTheme();
+        break;
+      case "music":
+        toggleMusic();
+        break;
+      case "back":
         history.back();
         break;
     }
