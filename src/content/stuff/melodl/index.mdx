@@ -13,20 +13,28 @@ tech: ["macos", "swift", "yt-dlp", "ffmpeg", "sparkle"]
 ### Features
 
 - **URL-to-audio flow** - accepts media URLs and downloads audio tracks
+- **Spotify links** - paste a track, album, playlist, or Liked Songs link. Each song is matched on YouTube Music and tagged from Spotify
+- **Spotify connection** - public playlists work without an account, up to the first 100 songs. Connecting downloads your own playlists, playlists you collaborate on, and Liked Songs in full
+- **Match review** - uncertain YouTube Music matches pause for review, and the review can be hidden while you look through the track list
 - **Broad site support via yt-dlp** - works with many platforms (YouTube/YouTube Music, SoundCloud, TikTok, Instagram, X, and more)
-- **Format and quality controls** - configurable output settings for conversion
+- **Format and quality controls** - MP3, M4A, FLAC, WAV, or OGG, with a quality setting
 - **Playlist support** - handles playlist downloads with queue and status UI
+- **Parallel sessions** - runs more than one download at a time and keeps session history
+- **Preview and trim** - preview a finished track, or trim it on a waveform and save a new file or replace the original
 - **Duplicate-aware downloads** - checks an indexed local library to prevent obvious re-downloads
 - **Advanced duplicate cleanup** - byte-level audio hashing for higher-confidence duplicate matching
 - **Rekordbox XML import** - improves duplicate matching for DJ-oriented libraries
 - **Staged cleanup sessions** - review and confirm duplicate actions before they are finalized
 - **Undo grace window** - short post-action undo period for smart cleanup operations
 - **Metadata and thumbnail embedding** - can enrich downloaded files depending on output format
+- **Menu bar mode** - can run from the menu bar only, launch at login, and notify when a session finishes
 - **Automatic binary update checks** - tracks updates for bundled `yt-dlp`, `ffmpeg`, and `ffprobe`
 
 ### Technical Details
 
+- Spotify links are resolved to a track list, matched on YouTube Music, and then downloaded through the same `yt-dlp` pipeline. A Spotify connection uses the Web API for playlists you own or collaborate on.
 - the app orchestrates bundled CLI tools (`yt-dlp`, `ffmpeg`, `ffprobe`) through Swift `Process` execution.
+- finished tracks can be previewed or trimmed in the app. Trimming runs `ffmpeg` on the local file.
 - playlist URLs can be prefetched so multiple entries are processed as a managed queue.
 - users can define library paths that are indexed for duplicate-aware download decisions.
 - duplicate resolution can use byte-level raw audio hashing for high-confidence matching.
