@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@alexapvl/drwr':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@astrojs/mdx':
         specifier: ^4.3.13
         version: 4.3.13(astro@5.17.1(rollup@4.57.1)(tsx@4.23.0)(typescript@5.9.3))
@@ -33,8 +33,8 @@ importers:
 
 packages:
 
-  '@alexapvl/drwr@0.1.0':
-    resolution: {integrity: sha512-n9VhCHz/8eD9uc9GEeRr+7ntbN/zKy1Yb0XZ6HT0DQx5orSWcVYiji3sNLZjo8+Zx9jhtzUK3aAbeKFqY7FK+Q==}
+  '@alexapvl/drwr@0.1.1':
+    resolution: {integrity: sha512-p/E68iNqWVZ2VRsdQIgBFrBt3jnf+dbYTu+8yYexBGfal6M/aYSwUhJpyhr1WqkhSOGl/+PLC+1H1dFeeze7AA==}
 
   '@astrojs/compiler@2.13.0':
     resolution: {integrity: sha512-mqVORhUJViA28fwHYaWmsXSzLO9osbdZ5ImUfxBarqsYdMlPbqAqGJCxsNzvppp1BEzc1mJNjOVvQqeDN8Vspw==}
@@ -1871,7 +1871,7 @@ packages:
 
 snapshots:
 
-  '@alexapvl/drwr@0.1.0': {}
+  '@alexapvl/drwr@0.1.1': {}
 
   '@astrojs/compiler@2.13.0': {}
 
