@@ -10,7 +10,7 @@
     "fetch-project-meta": "tsx scripts/fetch-project-meta.ts"
   },
   "dependencies": {
-    "@alexapvl/drwr": "^0.1.0",
+    "@alexapvl/drwr": "^0.1.1",
     "@astrojs/mdx": "^4.3.13",
     "@astrojs/sitemap": "^3.7.0",
     "astro": "^5.17.1",
