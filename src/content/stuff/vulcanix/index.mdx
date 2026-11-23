@@ -1,0 +1,33 @@
+---
+title: "Vulcanix"
+description: "website for a tyre shop in Gheorgheni, Cluj-Napoca"
+pubDate: 2026-11-23
+role: client-work
+lastTouched: 2026-11-23
+demo: "https://vulcanix.ro"
+tech: ["astro", "typescript", "cloudflare"]
+---
+
+[vulcanix.ro](https://vulcanix.ro) is the website for Vulcanix, the tyre shop where I have been changing my tyres for the last two years.
+
+the old website was a WordPress template. no logo, no personality, information all over the place and photos that were not from the shop, some of them made with AI. it did not look anything like the place I keep coming back to.
+
+so I built him a new one over a weekend and gave it to him for free. the longer story is in a separate [thought](/thoughts/keep-quality-people-close).
+
+### Features
+
+- **Prices up front** - tyre change and balancing prices by rim size, for cars and for SUVs and vans
+- **Tyre hotel** - seasonal tyre storage, with its own page and prices
+- **Waiting list** - no appointments in season, so the site explains how the waiting list works and that he calls you 15-20 minutes before your turn
+- **Ozonification** - a page for the car interior ozone treatment
+- **One tap contact** - phone, WhatsApp and directions from every page
+- **Real photos** - the shop, the car in the workshop and the owner at work, no stock images
+
+### Technical Details
+
+- the site is static Astro and TypeScript, hosted on Cloudflare Pages.
+- every business fact (phone, hours, prices, address) lives in one file, so a price change updates every page.
+- the logo is a redraw of the one printed on his hoodie, since he had no digital version of it.
+- the contact map is a static SVG built from OpenStreetMap data, so the page loads nothing from Google and needs no cookie banner.
+- fonts are subset to the weights and Romanian characters in use, about 8 KB per file.
+- the old WordPress addresses redirect to the new pages, so existing links and search results keep working.
