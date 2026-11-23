@@ -1,0 +1,47 @@
+---
+title: "Carlas Europe"
+description: "dealer-only e-commerce shop for Carlas films in Europe"
+pubDate: 2026-11-27
+role: client-work
+lastTouched: 2026-11-27
+demo: "https://carlaseurope.com"
+tech: ["astro", "typescript", "shopify", "tailwind", "three.js", "cloudflare", "i18n"]
+collaborators:
+  - name: "Stefan"
+---
+
+[carlaseurope.com](https://carlaseurope.com) is the e-commerce shop for Carlas films in Europe: paint protection film, color wraps, window and windshield film.
+
+it is client work for VERLA SRL, which became the official European distributor for [Carlas International](https://carlasinternational.com/ppf/). part of that deal was a website. the owner of VERLA is the father of one of my best friends, and that is how we got to talk about it.
+
+I was not given any design direction, only the logos. everything else was up to me, and they did not ask me to change anything design-wise in what I presented.
+
+the biggest challenge was that the GT Color line had no images at all. I got three sample books, 217 cards, and had to turn them into products. we tried photos first, and without a studio or any gear they looked bad. so I scanned them, with the printer in my room and a script that drives the scanner at high resolution and digitizes every card.
+
+the cards came with Carlas USA branding on them. I edited that out and digitally stamped each card with the Carlas Europe logo, the color name and its code. if a color is ever renamed but keeps its code, I only have to change the text, not rescan the card.
+
+from the scans I built a 3D version of each card, so you can see how light moves across the film before buying a roll.
+
+it was also my first time using Shopify, which meant learning it while thinking through every edge case a shop has: accounts, login, cart, checkout and who gets to see which price.
+
+I do not sell the films and I do not take any commission. I still built it the way I would have if it were my own shop. I did not want another copy of what every other Carlas distributor has. I wanted it to feel handcrafted, timeless and easy to maintain, not a template nobody touches after launch.
+
+thank you to VERLA for trusting me with this this early in my career, and to Stefan for helping with the copy.
+
+### Features
+
+- **Dealer-only prices** - prices are hidden until you log in, and you can only log in after applying for a dealer or installer account
+- **Two price lists** - dealers and installers see different prices, computed per roll from size and price per m²
+- **217 scanned GT Color cards** - rebranded, filterable by effect and availability, each with a 3D sample card
+- **Seven languages** - English, Dutch, German, French, Spanish, Italian and Romanian, with Shopify login and checkout in the page's language
+- **Real cart** - films ordered by the roll or by the metre, shipped worldwide with GLS
+- **Content pages** - warranty, how-to, FAQ, gallery with a photo viewer, contact and legal pages
+
+### Technical Details
+
+- the site is Astro and TypeScript on Cloudflare, with Tailwind and Shopify as the backend through the Storefront API.
+- product data is pulled from Shopify at build time, so every product page is static HTML that search engines can index. that adds up to 300+ products and 2,000+ indexable pages across all languages.
+- dealer prices never ship with the product pages. they come from the server, only for logged-in B2B accounts.
+- roll prices live as Shopify metafields (width, length, price per m² for each list) and a sync script recomputes every variant from them.
+- the 3D sample cards and the home page scene are built with Three.js, with a still image and a progress indicator while the 3D loads.
+- the scan pipeline lives in its own repository: scanning, cleanup, rebranding, the catalog and the sync to Shopify.
